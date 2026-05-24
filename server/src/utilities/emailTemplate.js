@@ -542,3 +542,77 @@ export const badgeEarnedEmailTemplate = ({ name, badge, totalDonations }) => {
 
 	return { subject, html };
 };
+
+export const emergencyAlertEmailTemplate = ({ name, orgName, patientName, bloodType, unitsNeeded, reason, location, city, deadline }) => {
+	const subject = `🚨 Emergency Blood Request: ${bloodType}`;
+
+	const html = `
+	<!DOCTYPE html>
+	<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>Emergency Alert</title>
+	</head>
+
+	<body style="margin:0;padding:0;background:#fef2f2;font-family:Arial;">
+		<table width="100%">
+			<tr>
+				<td align="center" style="padding:40px;">
+					
+					<table width="600" style="background:#fff;border-radius:12px;overflow:hidden;">
+						
+						<tr>
+							<td style="background:#dc2626;color:white;text-align:center;padding:30px;">
+								<h1>🚨 Emergency Blood Needed</h1>
+							</td>
+						</tr>
+
+						<tr>
+							<td style="padding:30px;">
+								<h2>Hello ${name},</h2>
+
+								<p>
+									A critical blood requirement has been reported.
+								</p>
+
+								<div style="background:#fee2e2;padding:20px;border-radius:10px;margin:20px 0;">
+									<p><strong>Organization:</strong> ${orgName}</p>
+									<p><strong>Patient:</strong> ${patientName}</p>
+									<p><strong>Blood Type:</strong> ${bloodType}</p>
+									<p><strong>Units Needed:</strong> ${unitsNeeded}</p>
+									<p><strong>Reason:</strong> ${reason}</p>
+									<p><strong>Location:</strong> ${location}, ${city}</p>
+									<p><strong>Deadline:</strong> ${deadline ? new Date(deadline).toDateString() : "ASAP"}</p>
+								</div>
+
+								<p>
+									If you are available, please consider donating immediately ❤️
+								</p>
+
+								<div style="text-align:center;margin-top:30px;">
+									<a href="#"
+										style="background:#dc2626;color:white;padding:12px 20px;border-radius:8px;text-decoration:none;">
+										Respond Now
+									</a>
+								</div>
+
+							</td>
+						</tr>
+
+						<tr>
+							<td style="text-align:center;padding:15px;background:#f9fafb;font-size:12px;">
+								© ${new Date().getFullYear()} Blood Donation System
+							</td>
+						</tr>
+
+					</table>
+
+				</td>
+			</tr>
+		</table>
+	</body>
+	</html>
+	`;
+
+	return { subject, html };
+};
