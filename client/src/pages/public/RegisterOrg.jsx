@@ -8,6 +8,7 @@ import { Eye, EyeOff, Upload, CheckCircle, Clock } from "lucide-react";
 export default function RegisterOrg() {
 	const navigate = useNavigate();
 	const [showPass, setShowPass] = useState(false);
+	const [showConfirmPass, setShowConfirmPass] = useState(false);
 	const [docFile, setDocFile] = useState(null);
 	const [success, setSuccess] = useState(false);
 	const {
@@ -101,10 +102,20 @@ export default function RegisterOrg() {
 									{errors.password && <p className="text-red-500 text-xs mt-1 font-sans">{errors.password.message}</p>}
 								</div>
 								<div>
-									<label className="label">Phone *</label>
-									<input type="tel" {...register("phone", { required: "Required" })} className="input-field" placeholder="Enter phone number" />
-									{errors.phone && <p className="text-red-500 text-xs mt-1 font-sans">{errors.phone.message}</p>}
+									<label className="label">Confirm Password *</label>
+									<div className="relative">
+										<input {...register("confirmPassword", { required: "Required", minLength: { value: 6, message: "Min 6 chars" } })} type={showConfirmPass ? "text" : "password"} className="input-field pr-10" placeholder="Enter confirm password" />
+										<button type="button" onClick={() => setShowConfirmPass(!showConfirmPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400">
+											{showConfirmPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+										</button>
+									</div>
+									{errors.confirmPassword && <p className="text-red-500 text-xs mt-1 font-sans">{errors.confirmPassword.message}</p>}
 								</div>
+							</div>
+							<div>
+								<label className="label">Phone *</label>
+								<input type="tel" {...register("phone", { required: "Required" })} className="input-field" placeholder="Enter phone number" />
+								{errors.phone && <p className="text-red-500 text-xs mt-1 font-sans">{errors.phone.message}</p>}
 							</div>
 						</div>
 
@@ -178,7 +189,7 @@ export default function RegisterOrg() {
 											<div>
 												<Upload className="w-8 h-8 text-stone-400 mx-auto mb-2" />
 												<p className="text-sm text-stone-500 font-sans">Upload registration certificate or legal document</p>
-												<p className="text-xs text-stone-400 font-sans mt-1">PDF, JPG, PNG up to 5MB</p>
+												<p className="text-xs text-stone-400 font-sans mt-1">JPG, PNG up to 5MB</p>
 											</div>
 										)}
 									</div>

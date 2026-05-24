@@ -6,6 +6,7 @@ import { mailSvc } from "../../services/emailService.js";
 import { httpStatusCode } from "../../constants/httpStatusCode.js";
 import { httpStatusMsg } from "../../constants/httpStatusMsg.js";
 import { badgeEarnedEmailTemplate, campaignInviteEmailTemplate } from "../../utilities/emailTemplate.js";
+import FileUploadService from "../../services/cloudinary-service.js";
 
 class CampaignService {
 	async getAllCampaigns(query) {
@@ -54,6 +55,12 @@ class CampaignService {
 				statusMsg: httpStatusMsg.ORG_NOT_APPROVED,
 			};
 		}
+		let imageUrl = null;
+
+		if (file) {
+			const uploadResult = await FileUploadService.uploadFile(file.path, "campaigns");
+			imageUrl = uploadResult;
+		}
 
 		const { title, description, type, targetBloodTypes, targetUnits, startDate, endDate, venue, city, address, pointsReward, requirements, contactInfo, tags } = body;
 
@@ -69,7 +76,7 @@ class CampaignService {
 			venue,
 			city,
 			address,
-			image: file ? file.path : null,
+			image: imageUrl,
 			pointsReward: pointsReward || 10,
 			requirements,
 			contactInfo,

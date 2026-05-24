@@ -5,6 +5,7 @@ import { httpStatusCode } from "../../constants/httpStatusCode.js";
 import { httpStatusMsg } from "../../constants/httpStatusMsg.js";
 import { mailSvc } from "../../services/emailService.js";
 import { donorWelcomeEmailTemplate } from "../../utilities/emailTemplate.js";
+import FileUploadService from "../../services/cloudinary-service.js";
 
 const signToken = (id) =>
 	jwt.sign({ sub: id }, process.env.JWT_SECRET, {
@@ -120,8 +121,6 @@ class DonorService {
 		return { user, profile };
 	}
 
-	// ─── Donor Profile ───────────────────────────────────────────────────────
-
 	async getDonorProfile(userId) {
 		const donor = await donorModel.findOne({ user: userId }).populate("user", "name email phone city").populate("donationHistory.campaign", "title startDate").populate("donationHistory.organization", "orgName");
 
@@ -156,7 +155,10 @@ class DonorService {
 			};
 		if (address) donor.address = address;
 		if (medicalConditions) donor.medicalConditions = JSON.parse(medicalConditions);
-		if (file) donor.profileImage = file.path;
+		if (file) {
+			const uploadResult = await FileUploadService.uploadFile(file.path, "donor-profiles");
+			donor.profileImage = uploadResult;
+		}
 		donor.isEligible = donor.checkEligibility();
 
 		await donor.save();

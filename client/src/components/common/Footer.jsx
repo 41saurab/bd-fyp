@@ -19,7 +19,7 @@ export default function Footer() {
 								<BloodDropIcon />
 							</div>
 							<span className="font-display font-bold text-xl text-white">
-								Blood<span className="text-blood-400">Bridge</span>
+								Rakta<span className="text-blood-400">bindu</span>
 							</span>
 						</Link>
 						<p className="text-sm text-stone-400 leading-relaxed font-sans">Connecting blood donors with organizations to save lives every day.</p>
@@ -74,7 +74,7 @@ export default function Footer() {
 							</div>
 							<div className="flex items-center gap-2 text-stone-400">
 								<Phone className="w-4 h-4 text-blood-400" />
-								<span>+1 (800) BLOOD-BD</span>
+								<span>9815342858</span>
 							</div>
 						</div>
 						<div className="mt-6">

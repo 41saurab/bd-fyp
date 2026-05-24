@@ -9,7 +9,6 @@ const router = express.Router();
 // Public routes
 router.get("/", campaignController.getAllCampaigns);
 router.get("/org/mine", checkLogin, checkPermission(["organization"]), campaignController.getOrgCampaigns);
-router.get("/:id", campaignController.getCampaignById);
 
 // Organization routes
 router.post("/", checkLogin, checkPermission(["organization"]), uploadFile("image").single("image"), campaignController.createCampaign);
@@ -20,4 +19,5 @@ router.post("/:id/register", checkLogin, checkPermission(["donor"]), campaignCon
 // Mark donation complete
 router.patch("/:id/donors/:donorId/donate", checkLogin, checkPermission(["organization"]), campaignController.markDonation);
 
+router.get("/:id", campaignController.getCampaignById);
 export default router;

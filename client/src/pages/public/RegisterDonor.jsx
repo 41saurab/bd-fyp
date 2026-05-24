@@ -10,6 +10,7 @@ const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 export default function RegisterDonor() {
 	const navigate = useNavigate();
 	const [showPass, setShowPass] = useState(false);
+	const [showConfirmPass, setShowConfirmPass] = useState(false);
 	const [selectedBT, setSelectedBT] = useState("");
 	const {
 		register,
@@ -77,10 +78,20 @@ export default function RegisterDonor() {
 								{errors.password && <p className="text-red-500 text-xs mt-1 font-sans">{errors.password.message}</p>}
 							</div>
 							<div>
-								<label className="label">City *</label>
-								<input {...register("city", { required: "City required" })} className="input-field" placeholder="Enter city" />
-								{errors.city && <p className="text-red-500 text-xs mt-1 font-sans">{errors.city.message}</p>}
+								<label className="label">Confirm Password *</label>
+								<div className="relative">
+									<input {...register("confirmPassword", { required: "Required", minLength: { value: 6, message: "Min 6 chars" } })} type={showConfirmPass ? "text" : "password"} className="input-field pr-10" placeholder="Enter confirm password" />
+									<button type="button" onClick={() => setShowConfirmPass(!showConfirmPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400">
+										{showConfirmPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+									</button>
+								</div>
+								{errors.confirmPassword && <p className="text-red-500 text-xs mt-1 font-sans">{errors.confirmPassword.message}</p>}
 							</div>
+						</div>
+						<div>
+							<label className="label">City *</label>
+							<input {...register("city", { required: "City required" })} className="input-field" placeholder="Enter city" />
+							{errors.city && <p className="text-red-500 text-xs mt-1 font-sans">{errors.city.message}</p>}
 						</div>
 
 						{/* Blood Type Selector */}

@@ -4,10 +4,24 @@ import { httpStatusCode } from "../../constants/httpStatusCode.js";
 import { httpStatusMsg } from "../../constants/httpStatusMsg.js";
 import { mailSvc } from "../../services/emailService.js";
 import { organizationRegistrationEmailTemplate } from "../../utilities/emailTemplate.js";
+import FileUploadService from "../../services/cloudinary-service.js";
 
 class OrganizationService {
 	async registerOrganization(body, file) {
 		const { name, email, password, phone, orgName, orgType, registrationNumber, address, city, website, description, contactPerson, contactPhone } = body;
+
+		let uploadResult = null;
+
+		if (!file) {
+			throw {
+				status: httpStatusCode.BAD_REQUEST,
+				message: "Legal document is required",
+				statusMsg: httpStatusMsg.VALIDATION_FAILED,
+			};
+		}
+		if (file) {
+			uploadResult = await FileUploadService.uploadFile(file.path, "/organization-docs");
+		}
 
 		const existing = await userModel.findOne({ email });
 		if (existing) {
@@ -39,7 +53,7 @@ class OrganizationService {
 			description,
 			contactPerson,
 			contactPhone,
-			legalDocument: file ? file.path : null,
+			legalDocument: uploadResult || null,
 			status: "pending",
 		});
 
@@ -92,7 +106,10 @@ class OrganizationService {
 		fields.forEach((f) => {
 			if (body[f] !== undefined) org[f] = body[f];
 		});
-		if (file) org.logo = file.path;
+		if (file) {
+			const uploadResult = await FileUploadService.uploadFile(file.path, "organization-logos");
+			org.logo = uploadResult.url;
+		}
 		await org.save();
 		return org;
 	}
