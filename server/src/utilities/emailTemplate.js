@@ -211,7 +211,14 @@ export const donorWelcomeEmailTemplate = (donor) => {
 
 export const organizationRegistrationEmailTemplate = (org) => {
 	const subject = "Organization Registration Received - Pending Admin Approval";
-	const html = ` <!DOCTYPE html> <html> <head> <meta charset="UTF-8" /> <title>Registration Pending</title> </head> <body style="margin:0; padding:0; background:#f3f4f6; font-family:Arial, sans-serif;"> <table width="100%" cellpadding="0" cellspacing="0"> <tr> <td align="center" style="padding:40px 20px;"> <table width="600" style="background:#fff; border-radius:12px; overflow:hidden;"> <!-- Header --> <tr> <td style="background:#7c3aed; padding:40px; text-align:center; color:#fff;"> <h1 style="margin:0;">🏥 Blood Donation System</h1> <p style="margin-top:10px;">Organization Registration Received</p> </td> </tr> <!-- Body --> <tr> <td style="padding:40px;"> <h2 style="margin-top:0;">Hello ${org.name},</h2> <p style="color:#4b5563; line-height:1.6;"> Thank you for registering your organization on our platform. We have successfully received your application. </p> <!-- Status Box --> <div style=" background:#fef3c7; border-left:4px solid #f59e0b; padding:20px; margin:25px 0; border-radius:8px; "> <h3 style="margin:0; color:#92400e;"> ⏳ Pending Admin Verification </h3> <p style="margin:8px 0 0; color:#78350f;"> Your organization is currently under review. This process usually takes 24–48 hours. </p> </div> <!-- Info --> <p style="color:#374151;"> You will be notified by email once your account is approved. After approval, you will be able to: </p> <ul style="color:#4b5563;"> <li>Post blood donation requests</li> <li>Manage hospital/organization profile</li> <li>Reach verified donors instantly</li> </ul> <!-- CTA --> <div style="margin-top:30px; text-align:center;"> <p style="color:#9ca3af;"> If you have questions, contact our support team. </p> </div> </td> </tr> <!-- Footer --> <tr> <td style="text-align:center; padding:20px; background:#f9fafb; border-top:1px solid #e5e7eb;"> <p style="margin:0; font-size:12px; color:#9ca3af;"> © ${new Date().getFullYear()} Blood Donation System </p> <p style="margin:5px 0 0; font-size:12px; color:#9ca3af;"> This is an automated email. Please do not reply. </p> </td> </tr> </table> </td> </tr> </table> </body> </html> `;
+	const html = ` 
+	<!DOCTYPE html> 
+	<html> 
+		<head> 
+			<meta charset="UTF-8" /> 
+				<title>Registration Pending</title> 
+		</head> 
+			<body style="margin:0; padding:0; background:#f3f4f6; font-family:Arial, sans-serif;"> <table width="100%" cellpadding="0" cellspacing="0"> <tr> <td align="center" style="padding:40px 20px;"> <table width="600" style="background:#fff; border-radius:12px; overflow:hidden;"> <!-- Header --> <tr> <td style="background:#7c3aed; padding:40px; text-align:center; color:#fff;"> <h1 style="margin:0;">🏥 Blood Donation System</h1> <p style="margin-top:10px;">Organization Registration Received</p> </td> </tr> <!-- Body --> <tr> <td style="padding:40px;"> <h2 style="margin-top:0;">Hello ${org.name},</h2> <p style="color:#4b5563; line-height:1.6;"> Thank you for registering your organization on our platform. We have successfully received your application. </p> <!-- Status Box --> <div style=" background:#fef3c7; border-left:4px solid #f59e0b; padding:20px; margin:25px 0; border-radius:8px; "> <h3 style="margin:0; color:#92400e;"> ⏳ Pending Admin Verification </h3> <p style="margin:8px 0 0; color:#78350f;"> Your organization is currently under review. This process usually takes 24–48 hours. </p> </div> <!-- Info --> <p style="color:#374151;"> You will be notified by email once your account is approved. After approval, you will be able to: </p> <ul style="color:#4b5563;"> <li>Post blood donation requests</li> <li>Manage hospital/organization profile</li> <li>Reach verified donors instantly</li> </ul> <!-- CTA --> <div style="margin-top:30px; text-align:center;"> <p style="color:#9ca3af;"> If you have questions, contact our support team. </p> </div> </td> </tr> <!-- Footer --> <tr> <td style="text-align:center; padding:20px; background:#f9fafb; border-top:1px solid #e5e7eb;"> <p style="margin:0; font-size:12px; color:#9ca3af;"> © ${new Date().getFullYear()} Blood Donation System </p> <p style="margin:5px 0 0; font-size:12px; color:#9ca3af;"> This is an automated email. Please do not reply. </p> </td> </tr> </table> </td> </tr> </table> </body> </html> `;
 	return { subject, html };
 };
 
@@ -398,4 +405,140 @@ export const broadcastEmailTemplate = ({ subject, message }) => {
 	`;
 
 	return { subject: emailSubject, html };
+};
+
+export const campaignInviteEmailTemplate = ({ donorName, campaignTitle, orgName, city, venue, startDate, endDate }) => {
+	const subject = `🩸 Blood Donation Campaign - ${campaignTitle}`;
+
+	const html = `
+	<!DOCTYPE html>
+	<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>Campaign Invitation</title>
+	</head>
+	<body style="margin:0;padding:0;background:#f5f5f5;font-family:Arial,sans-serif;">
+		<table width="100%" cellpadding="0" cellspacing="0">
+			<tr>
+				<td align="center" style="padding:40px 20px;">
+					<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;">
+						
+						<tr>
+							<td style="background:#dc2626;padding:40px;text-align:center;color:white;">
+								<h1 style="margin:0;">🩸 Blood Donation Campaign</h1>
+								<p style="margin-top:10px;">Together we can save lives</p>
+							</td>
+						</tr>
+
+						<tr>
+							<td style="padding:40px;">
+								<h2>Hello ${donorName},</h2>
+
+								<p>
+									${orgName} is organizing a blood donation campaign in ${city}.
+								</p>
+
+								<div style="background:#fef2f2;padding:20px;border-radius:10px;margin:25px 0;">
+									<h3 style="margin-top:0;color:#b91c1c;">
+										${campaignTitle}
+									</h3>
+
+									<p><strong>📍 Venue:</strong> ${venue}</p>
+									<p><strong>🏙 City:</strong> ${city}</p>
+									<p><strong>📅 Start Date:</strong> ${new Date(startDate).toDateString()}</p>
+									<p><strong>📅 End Date:</strong> ${new Date(endDate).toDateString()}</p>
+								</div>
+
+								<p>
+									Your contribution can help save lives.
+									We would be grateful for your participation.
+								</p>
+
+								<p style="margin-top:40px;">
+									Thank you for being a life saver ❤️
+								</p>
+							</td>
+						</tr>
+
+						<tr>
+							<td style="padding:20px;text-align:center;background:#f9fafb;color:#6b7280;font-size:12px;">
+								© ${new Date().getFullYear()} BloodDonate
+							</td>
+						</tr>
+
+					</table>
+				</td>
+			</tr>
+		</table>
+	</body>
+	</html>
+	`;
+
+	return { subject, html };
+};
+
+export const badgeEarnedEmailTemplate = ({ name, badge, totalDonations }) => {
+	const subject = `🏆 Congratulations! You earned a badge`;
+
+	const html = `
+	<!DOCTYPE html>
+	<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>Badge Earned</title>
+	</head>
+
+	<body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial;">
+		<table width="100%" cellpadding="0" cellspacing="0">
+			<tr>
+				<td align="center" style="padding:40px;">
+					
+					<table width="600" style="background:#ffffff;border-radius:12px;overflow:hidden;">
+						
+						<tr>
+							<td style="background:#f59e0b;padding:30px;text-align:center;color:white;">
+								<h1>🏆 Badge Earned!</h1>
+							</td>
+						</tr>
+
+						<tr>
+							<td style="padding:30px;">
+								<h2>Hello ${name},</h2>
+
+								<p>
+									Congratulations! You have earned a new badge:
+								</p>
+
+								<div style="background:#fef3c7;padding:20px;border-radius:10px;text-align:center;margin:20px 0;">
+									<h2 style="color:#92400e;margin:0;">
+										${badge}
+									</h2>
+								</div>
+
+								<p>
+									Total Donations: <strong>${totalDonations}</strong>
+								</p>
+
+								<p>
+									Keep donating and saving lives ❤️
+								</p>
+							</td>
+						</tr>
+
+						<tr>
+							<td style="text-align:center;padding:15px;background:#f9fafb;color:#6b7280;font-size:12px;">
+								© ${new Date().getFullYear()} Blood Donation System
+							</td>
+						</tr>
+
+					</table>
+
+				</td>
+			</tr>
+		</table>
+	</body>
+	</html>
+	`;
+
+	return { subject, html };
 };
