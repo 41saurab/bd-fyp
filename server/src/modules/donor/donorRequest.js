@@ -1,7 +1,13 @@
 import Joi from "joi";
 
 export const registerDonorDTO = Joi.object({
-	name: Joi.string().min(2).max(100).required().label("name"),
+	name: Joi.string()
+		.regex(/^([A-Za-z]+(?:\s[A-Za-z]+){1,2})$/)
+		.required()
+		.messages({
+			"string.empty": "Full name is required.",
+			"string.pattern.base": "Full name must include first and last name (optionally middle name).",
+		}),
 	email: Joi.string().email().required().label("email"),
 	password: Joi.string().min(6).required().label("password"),
 	confirmPassword: Joi.string().valid(Joi.ref("password")).required().label("confirmPassword"),

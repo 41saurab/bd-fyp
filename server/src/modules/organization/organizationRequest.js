@@ -8,7 +8,10 @@ export const registerOrgDTO = Joi.object({
 	phone: Joi.string().allow("", null).optional().label("phone").min(10).max(10),
 	orgName: Joi.string().required().label("orgName"),
 	orgType: Joi.string().valid("hospital", "blood_bank", "clinic", "ngo", "other").required().label("orgType"),
-	registrationNumber: Joi.string().required().label("registrationNumber"),
+	registrationNumber: Joi.string().length(9).pattern(/^\d+$/).required().label("registrationNumber").messages({
+		"string.length": "PAN number must be exactly 9 digits",
+		"string.pattern.base": "PAN number must contain only numbers",
+	}),
 	address: Joi.string().required().label("address"),
 	city: Joi.string().required().label("city"),
 	website: Joi.string().uri().allow("", null).optional().label("website"),
