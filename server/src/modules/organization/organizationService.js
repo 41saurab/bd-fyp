@@ -88,7 +88,7 @@ class OrganizationService {
 				statusMsg: httpStatusMsg.ORG_NOT_FOUND,
 			};
 		}
-		const fields = ["description", "website", "contactPerson", "contactPhone", "address"];
+		const fields = ["orgName", "orgType", "description", "website", "contactPerson", "contactPhone", "address", "city"];
 		fields.forEach((f) => {
 			if (body[f] !== undefined) org[f] = body[f];
 		});
