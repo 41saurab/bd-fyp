@@ -5,6 +5,7 @@ import { notificationModel } from "../notification/notificationModel.js";
 import { mailSvc } from "../../services/emailService.js";
 import { httpStatusCode } from "../../constants/httpStatusCode.js";
 import { httpStatusMsg } from "../../constants/httpStatusMsg.js";
+import { emergencyAlertEmailTemplate } from "../../utilities/emailTemplate.js";
 
 // Returns donor blood types that are compatible with the recipient's blood type
 const getCompatibleDonorTypes = (recipientBloodType) => {
@@ -82,9 +83,23 @@ class EmergencyService {
 		const donors = await donorModel.find({ bloodType: { $in: compatible }, "notificationPreferences.emergency": true }).populate("user", "email name");
 
 		let emailCount = 0;
+
 		for (const donor of donors) {
-			if (donor.user) {
-				mailSvc.sendEmergencyAlert(donor.user.email, donor.user.name, request, org.orgName);
+			if (donor.user?.email) {
+				const { subject, html } = emergencyAlertEmailTemplate({
+					name: donor.user.name,
+					orgName: org.orgName,
+					patientName,
+					bloodType,
+					unitsNeeded,
+					reason,
+					location,
+					city,
+					deadline,
+				});
+
+				await mailSvc.sendEmail(donor.user.email, subject, html);
+
 				await notificationModel.create({
 					recipient: donor.user._id,
 					title: `🚨 Emergency: ${bloodType} Blood Needed!`,
@@ -92,6 +107,7 @@ class EmergencyService {
 					type: "emergency",
 					link: `/emergency/${request._id}`,
 				});
+
 				emailCount++;
 			}
 		}

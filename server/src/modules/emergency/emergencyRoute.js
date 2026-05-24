@@ -13,26 +13,10 @@ router.get("/org/mine", checkLogin, checkPermission(["organization"]), emergency
 router.get("/:id", emergencyController.getEmergencyById);
 
 // Organization routes
-router.post(
-    "/",
-    checkLogin,
-    checkPermission(["organization"]),
-    bodyValidator(createEmergencyDTO),
-    emergencyController.createEmergency
-);
-router.patch(
-    "/:id/fulfill",
-    checkLogin,
-    checkPermission(["organization"]),
-    emergencyController.fulfillEmergency
-);
+router.post("/", checkLogin, checkPermission(["organization"]), bodyValidator(createEmergencyDTO), emergencyController.createEmergency);
+router.patch("/:id/fulfill", checkLogin, checkPermission(["organization"]), emergencyController.fulfillEmergency);
 
 // Donor routes
-router.post(
-    "/:id/respond",
-    checkLogin,
-    checkPermission(["donor"]),
-    emergencyController.respondToEmergency
-);
+router.post("/:id/respond", checkLogin, checkPermission(["donor"]), emergencyController.respondToEmergency);
 
 export default router;
