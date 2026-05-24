@@ -12,28 +12,12 @@ router.get("/org/mine", checkLogin, checkPermission(["organization"]), campaignC
 router.get("/:id", campaignController.getCampaignById);
 
 // Organization routes
-router.post(
-    "/",
-    checkLogin,
-    checkPermission(["organization"]),
-    uploadFile("image").single("image"),
-    campaignController.createCampaign
-);
+router.post("/", checkLogin, checkPermission(["organization"]), uploadFile("image").single("image"), campaignController.createCampaign);
 
 // Donor routes
-router.post(
-    "/:id/register",
-    checkLogin,
-    checkPermission(["donor"]),
-    campaignController.registerForCampaign
-);
+router.post("/:id/register", checkLogin, checkPermission(["donor"]), campaignController.registerForCampaign);
 
 // Mark donation complete
-router.patch(
-    "/:id/donors/:donorId/donate",
-    checkLogin,
-    checkPermission(["organization"]),
-    campaignController.markDonation
-);
+router.patch("/:id/donors/:donorId/donate", checkLogin, checkPermission(["organization"]), campaignController.markDonation);
 
 export default router;

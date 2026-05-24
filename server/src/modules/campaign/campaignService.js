@@ -5,6 +5,7 @@ import { notificationModel } from "../notification/notificationModel.js";
 import { mailSvc } from "../../services/emailService.js";
 import { httpStatusCode } from "../../constants/httpStatusCode.js";
 import { httpStatusMsg } from "../../constants/httpStatusMsg.js";
+import { badgeEarnedEmailTemplate, campaignInviteEmailTemplate } from "../../utilities/emailTemplate.js";
 
 class CampaignService {
 	async getAllCampaigns(query) {
@@ -85,9 +86,21 @@ class CampaignService {
 		const donors = await donorModel.find({ ...bloodTypesFilter, ...cityFilter, "notificationPreferences.campaigns": true }).populate("user", "email name");
 
 		let emailCount = 0;
+
 		for (const donor of donors) {
-			if (donor.user) {
-				mailSvc.sendCampaignInvite(donor.user.email, donor.user.name, campaign, org.orgName);
+			if (donor.user?.email) {
+				const { subject, html } = campaignInviteEmailTemplate({
+					donorName: donor.user.name,
+					campaignTitle: campaign.title,
+					orgName: org.orgName,
+					city: campaign.city,
+					venue: campaign.venue,
+					startDate: campaign.startDate,
+					endDate: campaign.endDate,
+				});
+
+				await mailSvc.sendEmail(donor.user.email, subject, html);
+
 				await notificationModel.create({
 					recipient: donor.user._id,
 					title: `New Campaign: ${title}`,
@@ -95,6 +108,7 @@ class CampaignService {
 					type: "campaign",
 					link: `/campaigns/${campaign._id}`,
 				});
+
 				emailCount++;
 			}
 		}
@@ -188,21 +202,21 @@ class CampaignService {
 		await donor.save();
 
 		if (newBadge && donor.user) {
-			mailSvc.sendBadgeEarned(donor.user.email, donor.user.name, newBadge, donor.totalDonations);
+			const { subject, html } = badgeEarnedEmailTemplate({
+				name: donor.user.name,
+				badge: newBadge,
+				totalDonations: donor.totalDonations,
+			});
+
+			await mailSvc.sendEmail(donor.user.email, subject, html);
+
 			await notificationModel.create({
 				recipient: donor.user._id,
 				title: `🏆 Badge Earned: ${newBadge}!`,
-				message: `Congratulations! You've earned the "${newBadge}" badge for ${donor.totalDonations} donations!`,
+				message: `Congratulations! You've earned the "${newBadge}" badge!`,
 				type: "badge",
 			});
 		}
-
-		await notificationModel.create({
-			recipient: donor.user._id,
-			title: "Donation Recorded!",
-			message: `Your donation for "${campaign.title}" has been recorded. +${campaign.pointsReward} points!`,
-			type: "success",
-		});
 
 		return { donor, newBadge };
 	}
