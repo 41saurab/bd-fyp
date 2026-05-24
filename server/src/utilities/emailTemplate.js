@@ -589,13 +589,6 @@ export const emergencyAlertEmailTemplate = ({ name, orgName, patientName, bloodT
 									If you are available, please consider donating immediately ❤️
 								</p>
 
-								<div style="text-align:center;margin-top:30px;">
-									<a href="#"
-										style="background:#dc2626;color:white;padding:12px 20px;border-radius:8px;text-decoration:none;">
-										Respond Now
-									</a>
-								</div>
-
 							</td>
 						</tr>
 
