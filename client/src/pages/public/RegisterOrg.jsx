@@ -30,7 +30,7 @@ export default function RegisterOrg() {
 		if (!file) return;
 
 		if (!ALLOWED_DOC_TYPES.includes(file.type)) {
-			setDocError("Only PDF, JPG, or PNG files are accepted");
+			setDocError("Only JPG or PNG files are accepted");
 			setDocFile(null);
 			return;
 		}
@@ -308,11 +308,10 @@ export default function RegisterOrg() {
 										<input {...register("contactPerson")} className="input-field" placeholder="Enter contact person name" />
 									</div>
 									<div>
-										<label className="label">Contact Phone *</label>
+										<label className="label">Contact Phone</label>
 										<input
 											type="tel"
 											{...register("contactPhone", {
-												required: "Contact phone is required for emergency response",
 												pattern: {
 													value: /^(97|98)\d{8}$/,
 													message: "Enter a valid Nepali phone number (e.g. 98XXXXXXXX)",

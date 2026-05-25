@@ -3,12 +3,14 @@ import Joi from "joi";
 const NEPAL_PHONE_PATTERN = /^(97|98)\d{8}$/;
 
 export const registerOrgDTO = Joi.object({
-	name: Joi.string().min(2).max(100).required().messages({
-		"string.empty": "Contact person name is required.",
-		"any.required": "Contact person name is required.",
-		"string.min": "Name must be at least 2 characters.",
-		"string.max": "Name must not exceed 100 characters.",
-	}),
+	name: Joi.string()
+		.regex(/^([A-Za-z]+(?:\s[A-Za-z]+){1,2})$/)
+		.required()
+		.messages({
+			"string.empty": "Name is required.",
+			"any.required": "Name is required.",
+			"string.pattern.base": "Name must include first and last name (letters only, optionally a middle name).",
+		}),
 
 	email: Joi.string()
 		.email({ tlds: { allow: false } })
@@ -78,11 +80,15 @@ export const registerOrgDTO = Joi.object({
 		"string.max": "Description must not exceed 500 characters.",
 	}),
 
-	contactPerson: Joi.string().max(100).allow("", null).optional().messages({
-		"string.max": "Contact person name must not exceed 100 characters.",
-	}),
+	contactPerson: Joi.string()
+		.regex(/^([A-Za-z]+(?:\s[A-Za-z]+){1,2})$/)
+		.messages({
+			"string.empty": "Contact person is required.",
+			"any.required": "Contact person is required.",
+			"string.pattern.base": "Contact person must include first and last name (letters only, optionally a middle name).",
+		}),
 
-	contactPhone: Joi.string().pattern(NEPAL_PHONE_PATTERN).required().messages({
+	contactPhone: Joi.string().pattern(NEPAL_PHONE_PATTERN).messages({
 		"string.empty": "Contact phone number is required.",
 		"any.required": "Contact phone number is required.",
 		"string.pattern.base": "Please enter a valid Nepali phone number (e.g. 98XXXXXXXX).",

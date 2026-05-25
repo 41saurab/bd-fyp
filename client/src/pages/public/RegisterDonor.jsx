@@ -40,7 +40,7 @@ export default function RegisterDonor() {
 		}
 		try {
 			await axios.post("/api/auth/register/donor", { ...data, bloodType: selectedBT });
-			toast.success("Account created! Welcome to BloodBridge.");
+			toast.success("Account created! Please login to cotinue.");
 			navigate("/login");
 		} catch (err) {
 			toast.error(err.response?.data?.message || "Registration failed. Please try again.");

@@ -68,7 +68,7 @@ export default function AdminOrganizations() {
 				<table className="w-full">
 					<thead className="bg-stone-50 border-b border-stone-100">
 						<tr>
-							{["Organization", "Type", "City", "Contact", "Status", "Registered", "Actions"].map((h) => (
+							{["Organization", "Type", "City", "Contact", "Status", "Registered", "PAN No.", "Actions"].map((h) => (
 								<th key={h} className="text-left text-xs font-sans font-semibold text-stone-500 uppercase tracking-wide px-4 py-3">
 									{h}
 								</th>
@@ -99,6 +99,7 @@ export default function AdminOrganizations() {
 											<span className={`text-xs px-2 py-0.5 rounded-full font-sans font-medium ${statusColor[org.status]}`}>{org.status}</span>
 										</td>
 										<td className="px-4 py-3 text-xs text-stone-400 font-sans">{org.user?.createdAt ? format(new Date(org.user.createdAt), "MMM d, yyyy") : "-"}</td>
+										<td className="px-4 py-3 text-sm font-sans text-stone-500">{org.registrationNumber}</td>
 										<td className="px-4 py-3">
 											<div className="flex items-center gap-1">
 												{org.legalDocument && (
@@ -135,7 +136,6 @@ export default function AdminOrganizations() {
 				{orgs.length === 0 && !loading && <div className="text-center py-12 text-stone-400 font-sans">No organizations found</div>}
 			</div>
 
-			{/* Reject modal */}
 			{rejectModal && (
 				<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
 					<div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
