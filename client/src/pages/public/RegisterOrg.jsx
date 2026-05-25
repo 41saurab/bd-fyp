@@ -14,8 +14,10 @@ export default function RegisterOrg() {
 	const {
 		register,
 		handleSubmit,
+		watch,
 		formState: { errors, isSubmitting },
 	} = useForm();
+	const password = watch("password");
 
 	const onSubmit = async (data) => {
 		const formData = new FormData();
@@ -83,20 +85,55 @@ export default function RegisterOrg() {
 							<div className="grid grid-cols-2 gap-4">
 								<div>
 									<label className="label">Contact Person Name *</label>
-									<input {...register("name", { required: "Required" })} className="input-field" placeholder="Enter contact person name" />
+									<input
+										{...register("name", {
+											required: "Name is required",
+											minLength: {
+												value: 2,
+												message: "Minimum 2 characters",
+											},
+											maxLength: {
+												value: 100,
+												message: "Maximum 100 characters",
+											},
+										})}
+										className="input-field"
+										placeholder="Enter contact person name"
+									/>
 									{errors.name && <p className="text-red-500 text-xs mt-1 font-sans">{errors.name.message}</p>}
 								</div>
 								<div>
 									<label className="label">Email Address *</label>
-									<input {...register("email", { required: "Required", pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: "Invalid email" } })} className="input-field" placeholder="Enter organization email address" />
+									<input
+										{...register("email", {
+											required: "Email is required",
+											pattern: {
+												value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+												message: "Invalid email address",
+											},
+										})}
+										className="input-field"
+										placeholder="Enter email address"
+									/>
 									{errors.email && <p className="text-red-500 text-xs mt-1 font-sans">{errors.email.message}</p>}
 								</div>
 								<div>
 									<label className="label">Password *</label>
 									<div className="relative">
-										<input {...register("password", { required: "Required", minLength: { value: 6, message: "Min 6 chars" } })} type={showPass ? "text" : "password"} className="input-field pr-10" placeholder="Min 6 chars" />
+										<input
+											{...register("password", {
+												required: "Password is required",
+												minLength: {
+													value: 6,
+													message: "Password must be at least 6 characters",
+												},
+											})}
+											type={showPass ? "text" : "password"}
+											className="input-field pr-10"
+											placeholder="Enter password"
+										/>
 										<button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400">
-											{showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+											{!showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
 										</button>
 									</div>
 									{errors.password && <p className="text-red-500 text-xs mt-1 font-sans">{errors.password.message}</p>}
@@ -104,17 +141,36 @@ export default function RegisterOrg() {
 								<div>
 									<label className="label">Confirm Password *</label>
 									<div className="relative">
-										<input {...register("confirmPassword", { required: "Required", minLength: { value: 6, message: "Min 6 chars" } })} type={showConfirmPass ? "text" : "password"} className="input-field pr-10" placeholder="Enter confirm password" />
+										<input
+											{...register("confirmPassword", {
+												required: "Confirm password is required",
+												validate: (value) => value === password || "Passwords do not match",
+											})}
+											type={showConfirmPass ? "text" : "password"}
+											className="input-field pr-10"
+											placeholder="Enter confirm password"
+										/>
 										<button type="button" onClick={() => setShowConfirmPass(!showConfirmPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400">
-											{showConfirmPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+											{!showConfirmPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
 										</button>
 									</div>
 									{errors.confirmPassword && <p className="text-red-500 text-xs mt-1 font-sans">{errors.confirmPassword.message}</p>}
 								</div>
 							</div>
-							<div>
+							<div className="mt-4">
 								<label className="label">Phone *</label>
-								<input type="tel" {...register("phone", { required: "Required" })} className="input-field" placeholder="Enter phone number" />
+								<input
+									type="tel"
+									{...register("phone", {
+										required: "Phone number is required",
+										pattern: {
+											value: /^[0-9]{10}$/,
+											message: "Phone number must be 10 digits",
+										},
+									})}
+									className="input-field"
+									placeholder="Enter phone number"
+								/>
 								{errors.phone && <p className="text-red-500 text-xs mt-1 font-sans">{errors.phone.message}</p>}
 							</div>
 						</div>
@@ -125,12 +181,23 @@ export default function RegisterOrg() {
 								<div className="grid grid-cols-2 gap-4">
 									<div>
 										<label className="label">Organization Name *</label>
-										<input {...register("orgName", { required: "Required" })} className="input-field" placeholder="Enter organization name" />
+										<input
+											{...register("orgName", {
+												required: "Organization name is required",
+											})}
+											className="input-field"
+											placeholder="Enter organization name"
+										/>
 										{errors.orgName && <p className="text-red-500 text-xs mt-1 font-sans">{errors.orgName.message}</p>}
 									</div>
 									<div>
 										<label className="label">Organization Type *</label>
-										<select {...register("orgType", { required: "Required" })} className="input-field">
+										<select
+											{...register("orgType", {
+												required: "Organization type is required",
+											})}
+											className="input-field"
+										>
 											<option value="">Select type</option>
 											<option value="hospital">Hospital</option>
 											<option value="blood_bank">Blood Bank</option>
@@ -144,18 +211,40 @@ export default function RegisterOrg() {
 								<div className="grid grid-cols-2 gap-4">
 									<div>
 										<label className="label">Registration Number *</label>
-										<input {...register("registrationNumber", { required: "Required" })} className="input-field" placeholder="Enter PAN number" />
+										<input
+											{...register("registrationNumber", {
+												required: "PAN number is required",
+												pattern: {
+													value: /^[0-9]{9}$/,
+													message: "PAN number must be exactly 9 digits",
+												},
+											})}
+											className="input-field"
+											placeholder="Enter PAN number"
+										/>
 										{errors.registrationNumber && <p className="text-red-500 text-xs mt-1 font-sans">{errors.registrationNumber.message}</p>}
 									</div>
 									<div>
 										<label className="label">City *</label>
-										<input {...register("city", { required: "Required" })} className="input-field" placeholder="Enter city" />
+										<input
+											{...register("city", {
+												required: "City is required",
+											})}
+											className="input-field"
+											placeholder="Enter city"
+										/>
 										{errors.city && <p className="text-red-500 text-xs mt-1 font-sans">{errors.city.message}</p>}
 									</div>
 								</div>
 								<div>
 									<label className="label">Address *</label>
-									<input {...register("address", { required: "Required" })} className="input-field" placeholder="Enter address" />
+									<input
+										{...register("address", {
+											required: "Address is required",
+										})}
+										className="input-field"
+										placeholder="Enter address"
+									/>
 									{errors.address && <p className="text-red-500 text-xs mt-1 font-sans">{errors.address.message}</p>}
 								</div>
 								<div className="grid grid-cols-2 gap-4">
@@ -165,19 +254,38 @@ export default function RegisterOrg() {
 									</div>
 									<div>
 										<label className="label">Contact Phone</label>
-										<input type="tel" {...register("contactPhone")} className="input-field" placeholder="Enter contact phone number" />
+										<input
+											type="tel"
+											{...register("contactPhone", {
+												pattern: {
+													value: /^[0-9]{10}$/,
+													message: "Contact phone must be 10 digits",
+												},
+											})}
+											className="input-field"
+											placeholder="Enter contact phone number"
+										/>
 									</div>
 								</div>
 								<div>
 									<label className="label">Website</label>
-									<input {...register("website")} className="input-field" placeholder="Enter organization website" />
+									<input
+										{...register("website", {
+											pattern: {
+												value: /^(https?:\/\/)?([\w\d-]+\.)+\w{2,}(\/.*)?$/,
+												message: "Enter valid website URL",
+											},
+										})}
+										className="input-field"
+										placeholder="e.g. https://example.com"
+									/>
 								</div>
 								<div>
 									<label className="label">Description</label>
 									<textarea {...register("description")} rows={3} className="input-field resize-none" placeholder="Brief description of your organization..." />
 								</div>
 								<div>
-									<label className="label">Legal Document (PDF/Image)</label>
+									<label className="label">Legal Document</label>
 									<div className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors ${docFile ? "border-green-300 bg-green-50" : "border-stone-200 hover:border-crimson hover:bg-red-50"}`} onClick={() => document.getElementById("doc-upload").click()}>
 										<input id="doc-upload" type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" hidden onChange={(e) => setDocFile(e.target.files[0])} />
 										{docFile ? (

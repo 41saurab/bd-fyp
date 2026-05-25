@@ -16,7 +16,7 @@ export const registerDonorDTO = Joi.object({
 	bloodType: Joi.string().valid("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-").required().label("bloodType"),
 	dateOfBirth: Joi.date().allow(null).optional().label("dateOfBirth"),
 	gender: Joi.string().valid("male", "female", "other").allow(null).optional().label("gender"),
-	weight: Joi.number().allow(null).optional().label("weight"),
+	weight: Joi.number().allow(null).optional().label("weight").min(60),
 });
 
 export const loginDTO = Joi.object({

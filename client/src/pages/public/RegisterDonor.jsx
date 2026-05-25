@@ -17,8 +17,9 @@ export default function RegisterDonor() {
 		handleSubmit,
 		watch,
 		formState: { errors, isSubmitting },
-		setValue,
 	} = useForm();
+
+	const password = watch("password");
 
 	const onSubmit = async (data) => {
 		if (!selectedBT) return toast.error("Please select your blood type");
@@ -52,27 +53,69 @@ export default function RegisterDonor() {
 						<div className="grid grid-cols-2 gap-4">
 							<div>
 								<label className="label">Full Name *</label>
-								<input {...register("name", { required: "Name required" })} className="input-field" placeholder="Enter full name" />
+								<input
+									{...register("name", {
+										required: "Full name is required",
+										pattern: {
+											value: /^([A-Za-z]+(?:\s[A-Za-z]+){1,2})$/,
+											message: "Enter first and last name",
+										},
+									})}
+									className="input-field"
+									placeholder="Enter full name"
+								/>
 								{errors.name && <p className="text-red-500 text-xs mt-1 font-sans">{errors.name.message}</p>}
 							</div>
 							<div>
 								<label className="label">Phone Number *</label>
-								<input {...register("phone", { required: "Phone required" })} className="input-field" placeholder="Enter phone number" type="tel" />
+								<input
+									{...register("phone", {
+										required: "Phone number is required",
+										pattern: {
+											value: /^[0-9]{10}$/,
+											message: "Phone number must be 10 digits",
+										},
+									})}
+									type="tel"
+									className="input-field"
+									placeholder="98XXXXXXXX"
+								/>
 								{errors.phone && <p className="text-red-500 text-xs mt-1 font-sans">{errors.phone.message}</p>}
 							</div>
 						</div>
 						<div>
 							<label className="label">Email Address *</label>
-							<input {...register("email", { required: "Email required", pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: "Invalid email" } })} className="input-field" placeholder="Enter email address" />
+							<input
+								{...register("email", {
+									required: "Email is required",
+									pattern: {
+										value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+										message: "Invalid email address",
+									},
+								})}
+								className="input-field"
+								placeholder="Enter email"
+							/>
 							{errors.email && <p className="text-red-500 text-xs mt-1 font-sans">{errors.email.message}</p>}
 						</div>
 						<div className="grid grid-cols-2 gap-4">
 							<div>
 								<label className="label">Password *</label>
 								<div className="relative">
-									<input {...register("password", { required: "Password required", minLength: { value: 6, message: "Min 6 chars" } })} type={showPass ? "text" : "password"} className="input-field pr-10" placeholder="Min 6 characters" />
+									<input
+										{...register("password", {
+											required: "Password is required",
+											minLength: {
+												value: 6,
+												message: "Password must be at least 6 characters",
+											},
+										})}
+										type={showPass ? "text" : "password"}
+										className="input-field pr-10"
+										placeholder="Enter password"
+									/>
 									<button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400">
-										{showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+										{!showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
 									</button>
 								</div>
 								{errors.password && <p className="text-red-500 text-xs mt-1 font-sans">{errors.password.message}</p>}
@@ -80,9 +123,17 @@ export default function RegisterDonor() {
 							<div>
 								<label className="label">Confirm Password *</label>
 								<div className="relative">
-									<input {...register("confirmPassword", { required: "Required", minLength: { value: 6, message: "Min 6 chars" } })} type={showConfirmPass ? "text" : "password"} className="input-field pr-10" placeholder="Enter confirm password" />
+									<input
+										{...register("confirmPassword", {
+											required: "Confirm password is required",
+											validate: (value) => value === password || "Passwords do not match",
+										})}
+										type={showConfirmPass ? "text" : "password"}
+										className="input-field pr-10"
+										placeholder="Enter confirm password"
+									/>
 									<button type="button" onClick={() => setShowConfirmPass(!showConfirmPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400">
-										{showConfirmPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+										{!showConfirmPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
 									</button>
 								</div>
 								{errors.confirmPassword && <p className="text-red-500 text-xs mt-1 font-sans">{errors.confirmPassword.message}</p>}
@@ -90,7 +141,7 @@ export default function RegisterDonor() {
 						</div>
 						<div>
 							<label className="label">City *</label>
-							<input {...register("city", { required: "City required" })} className="input-field" placeholder="Enter city" />
+							<input {...register("city", { required: "City is required" })} className="input-field" placeholder="Enter city" />
 							{errors.city && <p className="text-red-500 text-xs mt-1 font-sans">{errors.city.message}</p>}
 						</div>
 
@@ -109,21 +160,36 @@ export default function RegisterDonor() {
 
 						<div className="grid grid-cols-3 gap-4">
 							<div>
-								<label className="label">Date of Birth</label>
-								<input {...register("dateOfBirth")} type="date" className="input-field" />
+								<label className="label">Date of Birth *</label>
+								<input {...register("dateOfBirth", { required: "Date of birth is required" })} type="date" className="input-field" />
+								{errors.dateOfBirth && <p className="text-red-500 text-xs mt-1 font-sans">{errors.dateOfBirth.message}</p>}
 							</div>
 							<div>
-								<label className="label">Gender</label>
-								<select {...register("gender")} className="input-field">
+								<label className="label">Gender *</label>
+								<select {...register("gender", { required: "Gender is required" })} className="input-field">
 									<option value="">Select</option>
 									<option value="male">Male</option>
 									<option value="female">Female</option>
 									<option value="other">Other</option>
 								</select>
+								{errors.gender && <p className="text-red-500 text-xs mt-1 font-sans">{errors.gender.message}</p>}
 							</div>
 							<div>
 								<label className="label">Weight (kg)</label>
-								<input {...register("weight")} type="number" className="input-field" placeholder="65" min="45" />
+								<input
+									{...register("weight", {
+										required: "Weight is required",
+										valueAsNumber: true,
+										min: {
+											value: 60,
+											message: "Weight must be at least 60kg",
+										},
+									})}
+									type="number"
+									className="input-field"
+									placeholder="60"
+								/>
+								{errors.weight && <p className="text-red-500 text-xs mt-1 font-sans">{errors.weight.message}</p>}
 							</div>
 						</div>
 
