@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
-import { Eye, EyeOff, Droplets } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 
 const BloodDrop = () => (
 	<svg viewBox="0 0 24 24" className="w-8 h-8 fill-crimson animate-heartbeat" xmlns="http://www.w3.org/2000/svg">
@@ -29,7 +29,17 @@ export default function Login() {
 			else if (res.user.role === "organization") navigate("/organization/dashboard");
 			else navigate("/donor/dashboard");
 		} catch (err) {
-			toast.error(err.response?.data?.message || "Invalid credentials");
+			const serverMsg = err.response?.data?.message;
+			// Provide a clear, specific error based on the server response
+			if (serverMsg === "Account deactivated") {
+				toast.error("Your account has been deactivated. Please contact support.");
+			} else if (serverMsg === "Account pending approval") {
+				toast.error("Your organization account is pending admin approval. You'll be notified by email once approved.");
+			} else if (serverMsg === "Invalid credentials") {
+				toast.error("Incorrect email or password. Please try again.");
+			} else {
+				toast.error(serverMsg || "Something went wrong. Please try again.");
+			}
 		}
 	};
 
@@ -78,13 +88,39 @@ export default function Login() {
 					<form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
 						<div>
 							<label className="label">Email Address</label>
-							<input {...register("email", { required: "Email required", pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: "Invalid email" } })} className="input-field" placeholder="Enter your email" />
+							<input
+								{...register("email", {
+									required: "Email address is required",
+									pattern: {
+										value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+										message: "Please enter a valid email address",
+									},
+								})}
+								className="input-field"
+								placeholder="Enter your email"
+								type="email"
+							/>
 							{errors.email && <p className="text-red-500 text-xs mt-1 font-sans">{errors.email.message}</p>}
 						</div>
 						<div>
 							<label className="label">Password</label>
 							<div className="relative">
-								<input {...register("password", { required: "Password required" })} type={showPass ? "text" : "password"} className="input-field pr-10" placeholder="Enter password" />
+								<input
+									{...register("password", {
+										required: "Password is required",
+										minLength: {
+											value: 6,
+											message: "Password must be at least 6 characters",
+										},
+										maxLength: {
+											value: 72,
+											message: "Password must not exceed 72 characters",
+										},
+									})}
+									type={showPass ? "text" : "password"}
+									className="input-field pr-10"
+									placeholder="Enter your password"
+								/>
 								<button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">
 									{showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
 								</button>

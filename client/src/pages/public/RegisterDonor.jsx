@@ -7,11 +7,23 @@ import { Eye, EyeOff, CheckCircle } from "lucide-react";
 
 const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
+const validateAge = (value) => {
+	if (!value) return "Date of birth is required";
+	const dob = new Date(value);
+	const today = new Date();
+	const age = (today - dob) / (365.25 * 24 * 60 * 60 * 1000);
+	if (dob > today) return "Date of birth cannot be in the future";
+	if (age < 18) return "You must be at least 18 years old to donate blood";
+	if (age > 65) return "Donors must be 65 years old or younger";
+	return true;
+};
+
 export default function RegisterDonor() {
 	const navigate = useNavigate();
 	const [showPass, setShowPass] = useState(false);
 	const [showConfirmPass, setShowConfirmPass] = useState(false);
 	const [selectedBT, setSelectedBT] = useState("");
+	const [btTouched, setBtTouched] = useState(false);
 	const {
 		register,
 		handleSubmit,
@@ -22,13 +34,16 @@ export default function RegisterDonor() {
 	const password = watch("password");
 
 	const onSubmit = async (data) => {
-		if (!selectedBT) return toast.error("Please select your blood type");
+		if (!selectedBT) {
+			setBtTouched(true);
+			return toast.error("Please select your blood type before continuing");
+		}
 		try {
 			await axios.post("/api/auth/register/donor", { ...data, bloodType: selectedBT });
-			toast.success("Registration successful! Welcome to Raktabindu!");
+			toast.success("Account created! Welcome to BloodBridge.");
 			navigate("/login");
 		} catch (err) {
-			toast.error(err.response?.data?.message || "Registration failed");
+			toast.error(err.response?.data?.message || "Registration failed. Please try again.");
 		}
 	};
 
@@ -58,7 +73,7 @@ export default function RegisterDonor() {
 										required: "Full name is required",
 										pattern: {
 											value: /^([A-Za-z]+(?:\s[A-Za-z]+){1,2})$/,
-											message: "Enter first and last name",
+											message: "Please enter your first and last name (letters only)",
 										},
 									})}
 									className="input-field"
@@ -72,8 +87,8 @@ export default function RegisterDonor() {
 									{...register("phone", {
 										required: "Phone number is required",
 										pattern: {
-											value: /^[0-9]{10}$/,
-											message: "Phone number must be 10 digits",
+											value: /^(97|98)\d{8}$/,
+											message: "Enter a valid Nepali phone number (e.g. 98XXXXXXXX)",
 										},
 									})}
 									type="tel"
@@ -83,21 +98,24 @@ export default function RegisterDonor() {
 								{errors.phone && <p className="text-red-500 text-xs mt-1 font-sans">{errors.phone.message}</p>}
 							</div>
 						</div>
+
 						<div>
 							<label className="label">Email Address *</label>
 							<input
 								{...register("email", {
-									required: "Email is required",
+									required: "Email address is required",
 									pattern: {
 										value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-										message: "Invalid email address",
+										message: "Please enter a valid email address",
 									},
 								})}
 								className="input-field"
 								placeholder="Enter email"
+								type="email"
 							/>
 							{errors.email && <p className="text-red-500 text-xs mt-1 font-sans">{errors.email.message}</p>}
 						</div>
+
 						<div className="grid grid-cols-2 gap-4">
 							<div>
 								<label className="label">Password *</label>
@@ -109,13 +127,17 @@ export default function RegisterDonor() {
 												value: 6,
 												message: "Password must be at least 6 characters",
 											},
+											maxLength: {
+												value: 72,
+												message: "Password must not exceed 72 characters",
+											},
 										})}
 										type={showPass ? "text" : "password"}
 										className="input-field pr-10"
 										placeholder="Enter password"
 									/>
 									<button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400">
-										{!showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+										{showPass ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
 									</button>
 								</div>
 								{errors.password && <p className="text-red-500 text-xs mt-1 font-sans">{errors.password.message}</p>}
@@ -125,23 +147,34 @@ export default function RegisterDonor() {
 								<div className="relative">
 									<input
 										{...register("confirmPassword", {
-											required: "Confirm password is required",
+											required: "Please confirm your password",
 											validate: (value) => value === password || "Passwords do not match",
 										})}
 										type={showConfirmPass ? "text" : "password"}
 										className="input-field pr-10"
-										placeholder="Enter confirm password"
+										placeholder="Re-enter password"
 									/>
 									<button type="button" onClick={() => setShowConfirmPass(!showConfirmPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400">
-										{!showConfirmPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+										{showConfirmPass ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
 									</button>
 								</div>
 								{errors.confirmPassword && <p className="text-red-500 text-xs mt-1 font-sans">{errors.confirmPassword.message}</p>}
 							</div>
 						</div>
+
 						<div>
 							<label className="label">City *</label>
-							<input {...register("city", { required: "City is required" })} className="input-field" placeholder="Enter city" />
+							<input
+								{...register("city", {
+									required: "City is required",
+									maxLength: {
+										value: 50,
+										message: "City name must not exceed 50 characters",
+									},
+								})}
+								className="input-field"
+								placeholder="Enter your city"
+							/>
 							{errors.city && <p className="text-red-500 text-xs mt-1 font-sans">{errors.city.message}</p>}
 						</div>
 
@@ -150,23 +183,40 @@ export default function RegisterDonor() {
 							<label className="label">Blood Type *</label>
 							<div className="grid grid-cols-4 gap-2">
 								{BLOOD_TYPES.map((bt) => (
-									<button key={bt} type="button" onClick={() => setSelectedBT(bt)} className={`py-3 rounded-xl text-sm font-bold font-sans border-2 transition-all ${selectedBT === bt ? "bg-crimson border-crimson text-white shadow-blood" : "border-stone-200 text-stone-600 hover:border-crimson hover:text-crimson"}`}>
+									<button
+										key={bt}
+										type="button"
+										onClick={() => {
+											setSelectedBT(bt);
+											setBtTouched(true);
+										}}
+										className={`py-3 rounded-xl text-sm font-bold font-sans border-2 transition-all ${selectedBT === bt ? "bg-crimson border-crimson text-white shadow-blood" : "border-stone-200 text-stone-600 hover:border-crimson hover:text-crimson"}`}
+									>
 										{bt}
 									</button>
 								))}
 							</div>
-							{!selectedBT && <p className="text-stone-400 text-xs mt-1 font-sans">Please select your blood type</p>}
+							{btTouched && !selectedBT && <p className="text-red-500 text-xs mt-1 font-sans">Please select your blood type</p>}
+							{!btTouched && !selectedBT && <p className="text-stone-400 text-xs mt-1 font-sans">Select your blood type from the options above</p>}
 						</div>
 
 						<div className="grid grid-cols-3 gap-4">
 							<div>
 								<label className="label">Date of Birth *</label>
-								<input {...register("dateOfBirth", { required: "Date of birth is required" })} type="date" className="input-field" />
+								<input
+									{...register("dateOfBirth", {
+										required: "Date of birth is required",
+										validate: validateAge,
+									})}
+									type="date"
+									className="input-field"
+									max={new Date().toISOString().split("T")[0]}
+								/>
 								{errors.dateOfBirth && <p className="text-red-500 text-xs mt-1 font-sans">{errors.dateOfBirth.message}</p>}
 							</div>
 							<div>
 								<label className="label">Gender *</label>
-								<select {...register("gender", { required: "Gender is required" })} className="input-field">
+								<select {...register("gender", { required: "Please select your gender" })} className="input-field">
 									<option value="">Select</option>
 									<option value="male">Male</option>
 									<option value="female">Female</option>
@@ -175,25 +225,29 @@ export default function RegisterDonor() {
 								{errors.gender && <p className="text-red-500 text-xs mt-1 font-sans">{errors.gender.message}</p>}
 							</div>
 							<div>
-								<label className="label">Weight (kg)</label>
+								<label className="label">Weight (kg) *</label>
 								<input
 									{...register("weight", {
 										required: "Weight is required",
 										valueAsNumber: true,
 										min: {
 											value: 60,
-											message: "Weight must be at least 60kg",
+											message: "Minimum weight to donate is 60 kg",
+										},
+										max: {
+											value: 300,
+											message: "Please enter a realistic weight",
 										},
 									})}
 									type="number"
 									className="input-field"
 									placeholder="60"
 								/>
+								<p className="text-stone-400 text-xs mt-0.5 font-sans">Minimum 60 kg required to donate</p>
 								{errors.weight && <p className="text-red-500 text-xs mt-1 font-sans">{errors.weight.message}</p>}
 							</div>
 						</div>
 
-						{/* Benefits */}
 						<div className="bg-red-50 rounded-xl p-4 border border-red-100">
 							<p className="text-sm font-sans font-semibold text-stone-700 mb-2">As a donor you'll receive:</p>
 							<div className="space-y-1.5">

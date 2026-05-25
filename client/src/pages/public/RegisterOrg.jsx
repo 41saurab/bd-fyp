@@ -3,13 +3,18 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
-import { Eye, EyeOff, Upload, CheckCircle, Clock } from "lucide-react";
+import { Eye, EyeOff, Upload, CheckCircle, Clock, AlertCircle } from "lucide-react";
+
+const ALLOWED_DOC_TYPES = ["application/pdf", "image/jpeg", "image/png", "image/jpg"];
+const MAX_DOC_SIZE_MB = 5;
 
 export default function RegisterOrg() {
 	const navigate = useNavigate();
 	const [showPass, setShowPass] = useState(false);
 	const [showConfirmPass, setShowConfirmPass] = useState(false);
 	const [docFile, setDocFile] = useState(null);
+	const [docError, setDocError] = useState("");
+	const [docTouched, setDocTouched] = useState(false);
 	const [success, setSuccess] = useState(false);
 	const {
 		register,
@@ -19,15 +24,41 @@ export default function RegisterOrg() {
 	} = useForm();
 	const password = watch("password");
 
+	const handleDocUpload = (e) => {
+		const file = e.target.files[0];
+		setDocTouched(true);
+		if (!file) return;
+
+		if (!ALLOWED_DOC_TYPES.includes(file.type)) {
+			setDocError("Only PDF, JPG, or PNG files are accepted");
+			setDocFile(null);
+			return;
+		}
+		if (file.size > MAX_DOC_SIZE_MB * 1024 * 1024) {
+			setDocError(`File must be under ${MAX_DOC_SIZE_MB} MB`);
+			setDocFile(null);
+			return;
+		}
+		setDocError("");
+		setDocFile(file);
+	};
+
 	const onSubmit = async (data) => {
+		if (!docFile) {
+			setDocTouched(true);
+			setDocError("Legal registration document is required");
+			return toast.error("Please upload your legal registration document before submitting");
+		}
+
 		const formData = new FormData();
 		Object.entries(data).forEach(([k, v]) => formData.append(k, v));
-		if (docFile) formData.append("legalDocument", docFile);
+		formData.append("legalDocument", docFile);
+
 		try {
 			await axios.post("/api/auth/register/organization", formData, { headers: { "Content-Type": "multipart/form-data" } });
 			setSuccess(true);
 		} catch (err) {
-			toast.error(err.response?.data?.message || "Registration failed");
+			toast.error(err.response?.data?.message || "Registration failed. Please try again.");
 		}
 	};
 
@@ -42,7 +73,7 @@ export default function RegisterOrg() {
 					<div className="card p-6 mb-6">
 						<div className="flex items-center gap-3 mb-3">
 							<Clock className="w-5 h-5 text-orange-500" />
-							<p className="text-sm font-sans font-semibold text-stone-700">Under Review (24-48 hours)</p>
+							<p className="text-sm font-sans font-semibold text-stone-700">Under Review (24–48 hours)</p>
 						</div>
 						<p className="text-sm text-stone-500 font-body">Our admin team will review your legal documents and approve your account. You'll receive an email notification once approved.</p>
 					</div>
@@ -75,11 +106,12 @@ export default function RegisterOrg() {
 						<Clock className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
 						<div>
 							<p className="text-sm font-sans font-semibold text-amber-800">Approval Required</p>
-							<p className="text-xs text-amber-700 font-sans mt-0.5">Registration requires admin approval. Upload legal documents for faster review.</p>
+							<p className="text-xs text-amber-700 font-sans mt-0.5">Registration requires admin approval. Upload your legal registration document to speed up the process.</p>
 						</div>
 					</div>
 
 					<form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+						{/* Account Information */}
 						<div className="border-b border-stone-100 pb-5">
 							<h3 className="text-sm font-sans font-semibold text-stone-700 uppercase tracking-wide mb-4">Account Information</h3>
 							<div className="grid grid-cols-2 gap-4">
@@ -87,14 +119,14 @@ export default function RegisterOrg() {
 									<label className="label">Contact Person Name *</label>
 									<input
 										{...register("name", {
-											required: "Name is required",
+											required: "Contact person name is required",
 											minLength: {
 												value: 2,
-												message: "Minimum 2 characters",
+												message: "Name must be at least 2 characters",
 											},
 											maxLength: {
 												value: 100,
-												message: "Maximum 100 characters",
+												message: "Name must not exceed 100 characters",
 											},
 										})}
 										className="input-field"
@@ -106,14 +138,15 @@ export default function RegisterOrg() {
 									<label className="label">Email Address *</label>
 									<input
 										{...register("email", {
-											required: "Email is required",
+											required: "Email address is required",
 											pattern: {
 												value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-												message: "Invalid email address",
+												message: "Please enter a valid email address",
 											},
 										})}
 										className="input-field"
 										placeholder="Enter email address"
+										type="email"
 									/>
 									{errors.email && <p className="text-red-500 text-xs mt-1 font-sans">{errors.email.message}</p>}
 								</div>
@@ -127,13 +160,17 @@ export default function RegisterOrg() {
 													value: 6,
 													message: "Password must be at least 6 characters",
 												},
+												maxLength: {
+													value: 72,
+													message: "Password must not exceed 72 characters",
+												},
 											})}
 											type={showPass ? "text" : "password"}
 											className="input-field pr-10"
 											placeholder="Enter password"
 										/>
 										<button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400">
-											{!showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+											{showPass ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
 										</button>
 									</div>
 									{errors.password && <p className="text-red-500 text-xs mt-1 font-sans">{errors.password.message}</p>}
@@ -143,38 +180,39 @@ export default function RegisterOrg() {
 									<div className="relative">
 										<input
 											{...register("confirmPassword", {
-												required: "Confirm password is required",
+												required: "Please confirm your password",
 												validate: (value) => value === password || "Passwords do not match",
 											})}
 											type={showConfirmPass ? "text" : "password"}
 											className="input-field pr-10"
-											placeholder="Enter confirm password"
+											placeholder="Re-enter password"
 										/>
 										<button type="button" onClick={() => setShowConfirmPass(!showConfirmPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400">
-											{!showConfirmPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+											{showConfirmPass ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
 										</button>
 									</div>
 									{errors.confirmPassword && <p className="text-red-500 text-xs mt-1 font-sans">{errors.confirmPassword.message}</p>}
 								</div>
 							</div>
 							<div className="mt-4">
-								<label className="label">Phone *</label>
+								<label className="label">Phone Number *</label>
 								<input
 									type="tel"
 									{...register("phone", {
 										required: "Phone number is required",
 										pattern: {
-											value: /^[0-9]{10}$/,
-											message: "Phone number must be 10 digits",
+											value: /^(97|98)\d{8}$/,
+											message: "Enter a valid Nepali phone number (e.g. 98XXXXXXXX)",
 										},
 									})}
 									className="input-field"
-									placeholder="Enter phone number"
+									placeholder="98XXXXXXXX"
 								/>
 								{errors.phone && <p className="text-red-500 text-xs mt-1 font-sans">{errors.phone.message}</p>}
 							</div>
 						</div>
 
+						{/* Organization Details */}
 						<div>
 							<h3 className="text-sm font-sans font-semibold text-stone-700 uppercase tracking-wide mb-4">Organization Details</h3>
 							<div className="space-y-4">
@@ -184,6 +222,14 @@ export default function RegisterOrg() {
 										<input
 											{...register("orgName", {
 												required: "Organization name is required",
+												minLength: {
+													value: 3,
+													message: "Organization name must be at least 3 characters",
+												},
+												maxLength: {
+													value: 150,
+													message: "Organization name must not exceed 150 characters",
+												},
 											})}
 											className="input-field"
 											placeholder="Enter organization name"
@@ -194,7 +240,7 @@ export default function RegisterOrg() {
 										<label className="label">Organization Type *</label>
 										<select
 											{...register("orgType", {
-												required: "Organization type is required",
+												required: "Please select an organization type",
 											})}
 											className="input-field"
 										>
@@ -210,7 +256,7 @@ export default function RegisterOrg() {
 								</div>
 								<div className="grid grid-cols-2 gap-4">
 									<div>
-										<label className="label">Registration Number *</label>
+										<label className="label">PAN Number *</label>
 										<input
 											{...register("registrationNumber", {
 												required: "PAN number is required",
@@ -220,7 +266,8 @@ export default function RegisterOrg() {
 												},
 											})}
 											className="input-field"
-											placeholder="Enter PAN number"
+											placeholder="Enter 9-digit PAN number"
+											maxLength={9}
 										/>
 										{errors.registrationNumber && <p className="text-red-500 text-xs mt-1 font-sans">{errors.registrationNumber.message}</p>}
 									</div>
@@ -229,6 +276,10 @@ export default function RegisterOrg() {
 										<input
 											{...register("city", {
 												required: "City is required",
+												maxLength: {
+													value: 50,
+													message: "City name must not exceed 50 characters",
+												},
 											})}
 											className="input-field"
 											placeholder="Enter city"
@@ -241,9 +292,13 @@ export default function RegisterOrg() {
 									<input
 										{...register("address", {
 											required: "Address is required",
+											maxLength: {
+												value: 200,
+												message: "Address must not exceed 200 characters",
+											},
 										})}
 										className="input-field"
-										placeholder="Enter address"
+										placeholder="Enter full address"
 									/>
 									{errors.address && <p className="text-red-500 text-xs mt-1 font-sans">{errors.address.message}</p>}
 								</div>
@@ -253,18 +308,20 @@ export default function RegisterOrg() {
 										<input {...register("contactPerson")} className="input-field" placeholder="Enter contact person name" />
 									</div>
 									<div>
-										<label className="label">Contact Phone</label>
+										<label className="label">Contact Phone *</label>
 										<input
 											type="tel"
 											{...register("contactPhone", {
+												required: "Contact phone is required for emergency response",
 												pattern: {
-													value: /^[0-9]{10}$/,
-													message: "Contact phone must be 10 digits",
+													value: /^(97|98)\d{8}$/,
+													message: "Enter a valid Nepali phone number (e.g. 98XXXXXXXX)",
 												},
 											})}
 											className="input-field"
-											placeholder="Enter contact phone number"
+											placeholder="98XXXXXXXX"
 										/>
+										{errors.contactPhone && <p className="text-red-500 text-xs mt-1 font-sans">{errors.contactPhone.message}</p>}
 									</div>
 								</div>
 								<div>
@@ -273,21 +330,25 @@ export default function RegisterOrg() {
 										{...register("website", {
 											pattern: {
 												value: /^(https?:\/\/)?([\w\d-]+\.)+\w{2,}(\/.*)?$/,
-												message: "Enter valid website URL",
+												message: "Please enter a valid website URL (e.g. https://example.com)",
 											},
 										})}
 										className="input-field"
 										placeholder="e.g. https://example.com"
 									/>
+									{errors.website && <p className="text-red-500 text-xs mt-1 font-sans">{errors.website.message}</p>}
 								</div>
 								<div>
 									<label className="label">Description</label>
 									<textarea {...register("description")} rows={3} className="input-field resize-none" placeholder="Brief description of your organization..." />
 								</div>
+
 								<div>
-									<label className="label">Legal Document</label>
-									<div className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors ${docFile ? "border-green-300 bg-green-50" : "border-stone-200 hover:border-crimson hover:bg-red-50"}`} onClick={() => document.getElementById("doc-upload").click()}>
-										<input id="doc-upload" type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" hidden onChange={(e) => setDocFile(e.target.files[0])} />
+									<label className="label">
+										Legal Document * <span className="text-stone-400 font-normal text-xs ml-1">(Registration certificate, max 5 MB)</span>
+									</label>
+									<div className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors ${docFile ? "border-green-300 bg-green-50" : docTouched && !docFile ? "border-red-300 bg-red-50" : "border-stone-200 hover:border-crimson hover:bg-red-50"}`} onClick={() => document.getElementById("doc-upload").click()}>
+										<input id="doc-upload" type="file" accept=".pdf,.jpg,.jpeg,.png" hidden onChange={handleDocUpload} />
 										{docFile ? (
 											<div className="flex items-center justify-center gap-2 text-green-600 font-sans text-sm">
 												<CheckCircle className="w-5 h-5" />
@@ -295,12 +356,18 @@ export default function RegisterOrg() {
 											</div>
 										) : (
 											<div>
-												<Upload className="w-8 h-8 text-stone-400 mx-auto mb-2" />
-												<p className="text-sm text-stone-500 font-sans">Upload registration certificate or legal document</p>
-												<p className="text-xs text-stone-400 font-sans mt-1">JPG, PNG up to 5MB</p>
+												<Upload className={`w-8 h-8 mx-auto mb-2 ${docTouched && !docFile ? "text-red-400" : "text-stone-400"}`} />
+												<p className="text-sm text-stone-500 font-sans">Click to upload registration certificate or legal document</p>
+												<p className="text-xs text-stone-400 font-sans mt-1">JPG or PNG — max 5 MB</p>
 											</div>
 										)}
 									</div>
+									{docError && (
+										<p className="text-red-500 text-xs mt-1 font-sans flex items-center gap-1">
+											<AlertCircle className="w-3 h-3" />
+											{docError}
+										</p>
+									)}
 								</div>
 							</div>
 						</div>
