@@ -140,9 +140,14 @@ export default function CreateCampaign() {
 									max: { value: 10000, message: "Target units seems unrealistically high" },
 								})}
 								type="number"
-								className="input-field"
 								placeholder="e.g. 50"
 								min="1"
+								onKeyDown={(e) => {
+									if (e.key === "-" || e.key === "e") {
+										e.preventDefault();
+									}
+								}}
+								className="input-field [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
 							/>
 							{errors.targetUnits && <p className="text-red-500 text-xs mt-1 font-sans">{errors.targetUnits.message}</p>}
 						</div>
@@ -156,6 +161,11 @@ export default function CreateCampaign() {
 								className="input-field"
 								placeholder="e.g. 10"
 								min="1"
+								onKeyDown={(e) => {
+									if (e.key === "-" || e.key === "e") {
+										e.preventDefault();
+									}
+								}}
 							/>
 							{errors.pointsReward && <p className="text-red-500 text-xs mt-1 font-sans">{errors.pointsReward.message}</p>}
 						</div>
@@ -163,7 +173,7 @@ export default function CreateCampaign() {
 
 					<div>
 						<label className="label">Requirements</label>
-						<textarea {...register("requirements")} rows={2} className="input-field resize-none" placeholder="e.g. Age 18–60, minimum weight 50 kg, no recent illness..." />
+						<textarea {...register("requirements")} rows={2} className="input-field resize-none" placeholder="e.g. Age 18–60, minimum weight 60 kg, no recent illness..." />
 					</div>
 
 					<div>

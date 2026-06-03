@@ -72,7 +72,11 @@ export default function CreateEmergency() {
 									min: { value: 1, message: "At least 1 unit must be requested" },
 									max: { value: 50, message: "Units requested seems unusually high — please verify" },
 								})}
-								type="number"
+								onKeyDown={(e) => {
+									if (e.key === "-" || e.key === "e") {
+										e.preventDefault();
+									}
+								}}
 								className="input-field"
 								min="1"
 								max="50"

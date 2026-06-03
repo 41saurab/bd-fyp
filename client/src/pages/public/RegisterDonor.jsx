@@ -230,6 +230,7 @@ export default function RegisterDonor() {
 									{...register("weight", {
 										required: "Weight is required",
 										valueAsNumber: true,
+
 										min: {
 											value: 60,
 											message: "Minimum weight to donate is 60 kg",
@@ -239,8 +240,14 @@ export default function RegisterDonor() {
 											message: "Please enter a realistic weight",
 										},
 									})}
+									onKeyDown={(e) => {
+										if (e.key === "-" || e.key === "e") {
+											e.preventDefault();
+										}
+									}}
 									type="number"
-									className="input-field"
+									min={0}
+									className="input-field [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
 									placeholder="60"
 								/>
 								<p className="text-stone-400 text-xs mt-0.5 font-sans">Minimum 60 kg required to donate</p>
