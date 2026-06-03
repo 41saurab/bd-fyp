@@ -62,7 +62,7 @@ export default function AdminDashboard() {
 				<div className="card p-6">
 					<h3 className="font-display font-semibold text-stone-800 mb-5">Blood Type Distribution</h3>
 					{pieData.length > 0 ? (
-						<ResponsiveContainer width="100%" height={220}>
+						<ResponsiveContainer width="100%" height={228}>
 							<PieChart>
 								<Pie data={pieData} cx="50%" cy="50%" innerRadius={55} outerRadius={85} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
 									{pieData.map((_, i) => (

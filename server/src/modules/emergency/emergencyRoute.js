@@ -9,6 +9,10 @@ const router = express.Router();
 
 // Public routes
 router.get("/", emergencyController.getAllEmergencies);
+
+// ✅ NEW: Proximity route — must be declared BEFORE /:id to avoid route collision
+router.get("/nearby", emergencyController.getNearbyEmergencies);
+
 router.get("/org/mine", checkLogin, checkPermission(["organization"]), emergencyController.getOrgEmergencies);
 router.get("/:id", emergencyController.getEmergencyById);
 

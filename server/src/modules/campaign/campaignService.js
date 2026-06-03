@@ -8,6 +8,8 @@ import { httpStatusMsg } from "../../constants/httpStatusMsg.js";
 import { badgeEarnedEmailTemplate, campaignInviteEmailTemplate } from "../../utilities/emailTemplate.js";
 import FileUploadService from "../../services/cloudinary-service.js";
 
+const CAMPAIGN_NOTIFY_RADIUS_METERS = 25_000;
+
 class CampaignService {
 	async getAllCampaigns(query) {
 		const { status, city, bloodType, page = 1, limit = 12 } = query;
@@ -29,6 +31,25 @@ class CampaignService {
 
 		const total = await campaignModel.countDocuments(filter);
 		return { campaigns, total, pages: Math.ceil(total / limit) };
+	}
+
+	async getNearbyCampaigns(lat, lng, radiusKm = 25, bloodType, status = "active") {
+		const filter = {
+			status,
+			geoLocation: {
+				$near: {
+					$geometry: { type: "Point", coordinates: [parseFloat(lng), parseFloat(lat)] },
+					$maxDistance: radiusKm * 1000,
+				},
+			},
+		};
+		if (bloodType && bloodType !== "All") filter.targetBloodTypes = { $in: [bloodType, "All"] };
+
+		return campaignModel.find(filter).populate({
+			path: "organization",
+			select: "orgName city orgType logo",
+			populate: { path: "user", select: "name" },
+		});
 	}
 
 	async getCampaignById(id) {
@@ -62,7 +83,9 @@ class CampaignService {
 			imageUrl = uploadResult;
 		}
 
-		const { title, description, type, targetBloodTypes, targetUnits, startDate, endDate, venue, city, address, pointsReward, requirements, contactInfo, tags } = body;
+		const { title, description, type, targetBloodTypes, targetUnits, startDate, endDate, venue, city, address, pointsReward, requirements, contactInfo, tags, latitude, longitude } = body;
+
+		const geoLocation = latitude && longitude ? { type: "Point", coordinates: [parseFloat(longitude), parseFloat(latitude)] } : undefined;
 
 		const campaign = await campaignModel.create({
 			organization: org._id,
@@ -77,6 +100,7 @@ class CampaignService {
 			city,
 			address,
 			image: imageUrl,
+			geoLocation, // ✅ NEW
 			pointsReward: pointsReward || 10,
 			requirements,
 			contactInfo,
@@ -87,10 +111,33 @@ class CampaignService {
 		org.totalCampaigns += 1;
 		await org.save();
 
-		// Notify eligible donors
+		let donors = [];
 		const bloodTypesFilter = campaign.targetBloodTypes.includes("All") ? {} : { bloodType: { $in: campaign.targetBloodTypes } };
-		const cityFilter = { city: { $regex: city, $options: "i" } };
-		const donors = await donorModel.find({ ...bloodTypesFilter, ...cityFilter, "notificationPreferences.campaigns": true }).populate("user", "email name");
+
+		if (geoLocation) {
+			donors = await donorModel
+				.find({
+					...bloodTypesFilter,
+					"notificationPreferences.campaigns": true,
+					location: {
+						$near: {
+							$geometry: geoLocation,
+							$maxDistance: CAMPAIGN_NOTIFY_RADIUS_METERS,
+						},
+					},
+				})
+				.populate("user", "email name");
+		}
+
+		if (!geoLocation || donors.length === 0) {
+			donors = await donorModel
+				.find({
+					...bloodTypesFilter,
+					city: { $regex: city, $options: "i" },
+					"notificationPreferences.campaigns": true,
+				})
+				.populate("user", "email name");
+		}
 
 		let emailCount = 0;
 
