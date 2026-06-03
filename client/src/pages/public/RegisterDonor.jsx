@@ -221,8 +221,13 @@ export default function RegisterDonor() {
 										max: { value: 300, message: "Weight too high" },
 									})}
 									type="number"
-									className="input-field"
+									className="input-field [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
 									placeholder="60"
+									onKeyDown={(e) => {
+										if (e.key === "e" || e.key === "-") {
+											e.preventDefault();
+										}
+									}}
 								/>
 								{errors.weight && <p className="text-red-500 text-xs mt-1 font-sans">{errors.weight.message}</p>}
 							</div>
