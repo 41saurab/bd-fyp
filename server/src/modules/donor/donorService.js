@@ -14,7 +14,7 @@ const signToken = (id) =>
 
 class DonorService {
 	async registerDonor(body) {
-		const { name, email, password, phone, city, bloodType, dateOfBirth, gender, weight } = body;
+		const { name, email, password, phone, city, bloodType, dateOfBirth, gender, weight, latitude, longitude } = body;
 
 		const existing = await userModel.findOne({ email });
 		if (existing) {
@@ -33,6 +33,9 @@ class DonorService {
 			phone,
 			city,
 		});
+
+		const location = latitude && longitude ? { type: "Point", coordinates: [parseFloat(longitude), parseFloat(latitude)] } : undefined;
+
 		const donor = await donorModel.create({
 			user: user._id,
 			bloodType,
@@ -40,6 +43,7 @@ class DonorService {
 			dateOfBirth,
 			gender,
 			weight,
+			location,
 		});
 
 		return {
@@ -135,7 +139,8 @@ class DonorService {
 	}
 
 	async updateDonorProfile(userId, body, file) {
-		const { city, weight, availability, notificationPreferences, address, medicalConditions } = body;
+		const { city, weight, availability, notificationPreferences, address, medicalConditions, latitude, longitude } = body;
+
 		const donor = await donorModel.findOne({ user: userId });
 		if (!donor) {
 			throw {
@@ -155,6 +160,14 @@ class DonorService {
 			};
 		if (address) donor.address = address;
 		if (medicalConditions) donor.medicalConditions = JSON.parse(medicalConditions);
+
+		if (latitude && longitude) {
+			donor.location = {
+				type: "Point",
+				coordinates: [parseFloat(longitude), parseFloat(latitude)],
+			};
+		}
+
 		if (file) {
 			const uploadResult = await FileUploadService.uploadFile(file.path, "donor-profiles");
 			donor.profileImage = uploadResult;
@@ -196,6 +209,22 @@ class DonorService {
 			daysUntilEligible,
 			lastDonationDate: donor.lastDonationDate,
 		};
+	}
+
+	async getDonorsNearLocation(lat, lng, radiusKm = 10, bloodType) {
+		const filter = {
+			availability: true,
+			isEligible: true,
+			location: {
+				$near: {
+					$geometry: { type: "Point", coordinates: [parseFloat(lng), parseFloat(lat)] },
+					$maxDistance: radiusKm * 1000,
+				},
+			},
+		};
+		if (bloodType) filter.bloodType = bloodType;
+
+		return donorModel.find(filter).populate("user", "name email phone city").limit(50);
 	}
 }
 

@@ -7,7 +7,6 @@ import { httpStatusCode } from "../../constants/httpStatusCode.js";
 import { httpStatusMsg } from "../../constants/httpStatusMsg.js";
 import { emergencyAlertEmailTemplate } from "../../utilities/emailTemplate.js";
 
-// Returns donor blood types that are compatible with the recipient's blood type
 const getCompatibleDonorTypes = (recipientBloodType) => {
 	const compatibility = {
 		"O-": ["O-", "O+", "A-", "A+", "B-", "B+", "AB-", "AB+"],
@@ -24,6 +23,10 @@ const getCompatibleDonorTypes = (recipientBloodType) => {
 		.map(([donor]) => donor);
 };
 
+const NEARBY_RADIUS_METERS = 10_000;
+const FALLBACK_RADIUS_METERS = 50_000;
+const MIN_NEARBY_DONORS = 5;
+
 class EmergencyService {
 	async getAllEmergencies(query) {
 		const { bloodType, city, status = "active" } = query;
@@ -38,6 +41,26 @@ class EmergencyService {
 				populate: { path: "user", select: "name" },
 			})
 			.sort("-createdAt");
+	}
+
+	async getNearbyEmergencies(lat, lng, radiusKm = 50, bloodType) {
+		const radiusMeters = radiusKm * 1000;
+		const filter = {
+			status: "active",
+			geoLocation: {
+				$near: {
+					$geometry: { type: "Point", coordinates: [parseFloat(lng), parseFloat(lat)] },
+					$maxDistance: radiusMeters,
+				},
+			},
+		};
+		if (bloodType) filter.bloodType = bloodType;
+
+		return emergencyModel.find(filter).populate({
+			path: "organization",
+			select: "orgName city orgType logo",
+			populate: { path: "user", select: "name" },
+		});
 	}
 
 	async getEmergencyById(id) {
@@ -62,7 +85,9 @@ class EmergencyService {
 			};
 		}
 
-		const { patientName, bloodType, unitsNeeded, urgencyLevel, reason, location, city, contactPerson, contactPhone, deadline, additionalNotes } = body;
+		const { patientName, bloodType, unitsNeeded, urgencyLevel, reason, location, city, contactPerson, contactPhone, deadline, additionalNotes, latitude, longitude } = body;
+
+		const geoLocation = latitude && longitude ? { type: "Point", coordinates: [parseFloat(longitude), parseFloat(latitude)] } : undefined;
 
 		const request = await emergencyModel.create({
 			organization: org._id,
@@ -77,10 +102,61 @@ class EmergencyService {
 			contactPhone,
 			deadline,
 			additionalNotes,
+			geoLocation, // ✅ NEW
 		});
 
 		const compatible = getCompatibleDonorTypes(bloodType);
-		const donors = await donorModel.find({ bloodType: { $in: compatible }, "notificationPreferences.emergency": true }).populate("user", "email name");
+
+		let donors = [];
+
+		if (geoLocation) {
+			const nearbyBaseFilter = {
+				bloodType: { $in: compatible },
+				"notificationPreferences.emergency": true,
+				availability: true,
+				isEligible: true,
+				location: {
+					$near: {
+						$geometry: geoLocation,
+						$maxDistance: NEARBY_RADIUS_METERS,
+					},
+				},
+			};
+
+			donors = await donorModel.find(nearbyBaseFilter).populate("user", "email name");
+
+			if (donors.length < MIN_NEARBY_DONORS) {
+				donors = await donorModel
+					.find({
+						...nearbyBaseFilter,
+						location: {
+							$near: {
+								$geometry: geoLocation,
+								$maxDistance: FALLBACK_RADIUS_METERS,
+							},
+						},
+					})
+					.populate("user", "email name");
+			}
+
+			if (donors.length === 0) {
+				donors = await donorModel
+					.find({
+						bloodType: { $in: compatible },
+						"notificationPreferences.emergency": true,
+						city: { $regex: city, $options: "i" },
+					})
+					.populate("user", "email name");
+			}
+		} else {
+			donors = await donorModel
+				.find({
+					bloodType: { $in: compatible },
+					"notificationPreferences.emergency": true,
+					city: { $regex: city, $options: "i" },
+				})
+				.populate("user", "email name");
+		}
 
 		let emailCount = 0;
 

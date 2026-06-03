@@ -12,6 +12,19 @@ const donorSchema = new mongoose.Schema({
 	weight: { type: Number },
 	address: { type: String },
 	city: { type: String },
+
+	location: {
+		type: {
+			type: String,
+			enum: ["Point"],
+			default: "Point",
+		},
+		coordinates: {
+			type: [Number],
+			default: undefined,
+		},
+	},
+
 	lastDonationDate: { type: Date },
 	totalDonations: { type: Number, default: 0 },
 	points: { type: Number, default: 0 },
@@ -41,14 +54,16 @@ const donorSchema = new mongoose.Schema({
 	createdAt: { type: Date, default: Date.now },
 });
 
-// Calculate eligibility (56 days between donations)
+donorSchema.index({ location: "2dsphere" });
+
+donorSchema.index({ bloodType: 1, availability: 1, isEligible: 1 });
+
 donorSchema.methods.checkEligibility = function () {
 	if (!this.lastDonationDate) return true;
 	const daysSince = (Date.now() - this.lastDonationDate) / (1000 * 60 * 60 * 24);
 	return daysSince >= 56;
 };
 
-// Update badge based on donation count
 donorSchema.methods.updateBadges = function () {
 	const count = this.totalDonations;
 	const badges = [];
