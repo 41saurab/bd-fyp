@@ -3,7 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
-import { Eye, EyeOff, CheckCircle } from "lucide-react";
+import { Eye, EyeOff, CheckCircle, LocateFixed, Loader2 } from "lucide-react";
+import useGeolocation from "../../hooks/useGeolocation";
 
 const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
@@ -24,14 +25,26 @@ export default function RegisterDonor() {
 	const [showConfirmPass, setShowConfirmPass] = useState(false);
 	const [selectedBT, setSelectedBT] = useState("");
 	const [btTouched, setBtTouched] = useState(false);
+	const [locationShared, setLocationShared] = useState(false);
+	const { coords, loading: geoLoading, error: geoError, request: requestLocation } = useGeolocation();
+
 	const {
 		register,
 		handleSubmit,
+		setValue,
 		watch,
 		formState: { errors, isSubmitting },
 	} = useForm();
 
 	const password = watch("password");
+
+	React.useEffect(() => {
+		if (coords && !locationShared) {
+			setValue("latitude", coords.latitude);
+			setValue("longitude", coords.longitude);
+			setLocationShared(true);
+		}
+	}, [coords, locationShared, setValue]);
 
 	const onSubmit = async (data) => {
 		if (!selectedBT) {
@@ -40,7 +53,7 @@ export default function RegisterDonor() {
 		}
 		try {
 			await axios.post("/api/auth/register/donor", { ...data, bloodType: selectedBT });
-			toast.success("Account created! Please login to cotinue.");
+			toast.success("Account created! Please login to continue.");
 			navigate("/login");
 		} catch (err) {
 			toast.error(err.response?.data?.message || "Registration failed. Please try again.");
@@ -82,14 +95,11 @@ export default function RegisterDonor() {
 								{errors.name && <p className="text-red-500 text-xs mt-1 font-sans">{errors.name.message}</p>}
 							</div>
 							<div>
-								<label className="label">Phone Number *</label>
+								<label className="label">Phone *</label>
 								<input
 									{...register("phone", {
 										required: "Phone number is required",
-										pattern: {
-											value: /^(97|98)\d{8}$/,
-											message: "Enter a valid Nepali phone number (e.g. 98XXXXXXXX)",
-										},
+										pattern: { value: /^(97|98)\d{8}$/, message: "Enter a valid Nepali number" },
 									})}
 									type="tel"
 									className="input-field"
@@ -100,18 +110,15 @@ export default function RegisterDonor() {
 						</div>
 
 						<div>
-							<label className="label">Email Address *</label>
+							<label className="label">Email *</label>
 							<input
 								{...register("email", {
-									required: "Email address is required",
-									pattern: {
-										value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-										message: "Please enter a valid email address",
-									},
+									required: "Email is required",
+									pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: "Enter a valid email address" },
 								})}
-								className="input-field"
-								placeholder="Enter email"
 								type="email"
+								className="input-field"
+								placeholder="your@email.com"
 							/>
 							{errors.email && <p className="text-red-500 text-xs mt-1 font-sans">{errors.email.message}</p>}
 						</div>
@@ -123,21 +130,14 @@ export default function RegisterDonor() {
 									<input
 										{...register("password", {
 											required: "Password is required",
-											minLength: {
-												value: 6,
-												message: "Password must be at least 6 characters",
-											},
-											maxLength: {
-												value: 72,
-												message: "Password must not exceed 72 characters",
-											},
+											minLength: { value: 8, message: "Minimum 8 characters" },
 										})}
 										type={showPass ? "text" : "password"}
 										className="input-field pr-10"
-										placeholder="Enter password"
+										placeholder="Min 8 characters"
 									/>
-									<button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400">
-										{showPass ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+									<button type="button" onClick={() => setShowPass((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400">
+										{showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
 									</button>
 								</div>
 								{errors.password && <p className="text-red-500 text-xs mt-1 font-sans">{errors.password.message}</p>}
@@ -148,14 +148,14 @@ export default function RegisterDonor() {
 									<input
 										{...register("confirmPassword", {
 											required: "Please confirm your password",
-											validate: (value) => value === password || "Passwords do not match",
+											validate: (v) => v === password || "Passwords do not match",
 										})}
 										type={showConfirmPass ? "text" : "password"}
 										className="input-field pr-10"
-										placeholder="Re-enter password"
+										placeholder="Repeat password"
 									/>
-									<button type="button" onClick={() => setShowConfirmPass(!showConfirmPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400">
-										{showConfirmPass ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+									<button type="button" onClick={() => setShowConfirmPass((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400">
+										{showConfirmPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
 									</button>
 								</div>
 								{errors.confirmPassword && <p className="text-red-500 text-xs mt-1 font-sans">{errors.confirmPassword.message}</p>}
@@ -167,18 +167,14 @@ export default function RegisterDonor() {
 							<input
 								{...register("city", {
 									required: "City is required",
-									maxLength: {
-										value: 50,
-										message: "City name must not exceed 50 characters",
-									},
+									maxLength: { value: 50, message: "City name too long" },
 								})}
 								className="input-field"
-								placeholder="Enter your city"
+								placeholder="Your city"
 							/>
 							{errors.city && <p className="text-red-500 text-xs mt-1 font-sans">{errors.city.message}</p>}
 						</div>
 
-						{/* Blood Type Selector */}
 						<div>
 							<label className="label">Blood Type *</label>
 							<div className="grid grid-cols-4 gap-2">
@@ -197,26 +193,17 @@ export default function RegisterDonor() {
 								))}
 							</div>
 							{btTouched && !selectedBT && <p className="text-red-500 text-xs mt-1 font-sans">Please select your blood type</p>}
-							{!btTouched && !selectedBT && <p className="text-stone-400 text-xs mt-1 font-sans">Select your blood type from the options above</p>}
 						</div>
 
 						<div className="grid grid-cols-3 gap-4">
 							<div>
 								<label className="label">Date of Birth *</label>
-								<input
-									{...register("dateOfBirth", {
-										required: "Date of birth is required",
-										validate: validateAge,
-									})}
-									type="date"
-									className="input-field"
-									max={new Date().toISOString().split("T")[0]}
-								/>
+								<input {...register("dateOfBirth", { required: "DOB required", validate: validateAge })} type="date" className="input-field" max={new Date().toISOString().split("T")[0]} />
 								{errors.dateOfBirth && <p className="text-red-500 text-xs mt-1 font-sans">{errors.dateOfBirth.message}</p>}
 							</div>
 							<div>
 								<label className="label">Gender *</label>
-								<select {...register("gender", { required: "Please select your gender" })} className="input-field">
+								<select {...register("gender", { required: "Please select gender" })} className="input-field">
 									<option value="">Select</option>
 									<option value="male">Male</option>
 									<option value="female">Female</option>
@@ -230,29 +217,37 @@ export default function RegisterDonor() {
 									{...register("weight", {
 										required: "Weight is required",
 										valueAsNumber: true,
-
-										min: {
-											value: 60,
-											message: "Minimum weight to donate is 60 kg",
-										},
-										max: {
-											value: 300,
-											message: "Please enter a realistic weight",
-										},
+										min: { value: 60, message: "Minimum 60 kg" },
+										max: { value: 300, message: "Weight too high" },
 									})}
-									onKeyDown={(e) => {
-										if (e.key === "-" || e.key === "e") {
-											e.preventDefault();
-										}
-									}}
 									type="number"
-									min={0}
-									className="input-field [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+									className="input-field"
 									placeholder="60"
 								/>
-								<p className="text-stone-400 text-xs mt-0.5 font-sans">Minimum 60 kg required to donate</p>
 								{errors.weight && <p className="text-red-500 text-xs mt-1 font-sans">{errors.weight.message}</p>}
 							</div>
+						</div>
+
+						<div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+							<p className="text-sm font-sans font-semibold text-stone-700 mb-1">📍 Share Your Location (Optional)</p>
+							<p className="text-xs text-stone-500 font-sans mb-3">Allows us to notify you about emergencies and campaigns near your actual location — more accurate than city-based matching.</p>
+
+							{locationShared ? (
+								<div className="flex items-center gap-2 text-green-700 text-sm font-sans">
+									<CheckCircle className="w-4 h-4" />
+									Location shared — you'll get proximity-based notifications
+								</div>
+							) : (
+								<button type="button" onClick={requestLocation} disabled={geoLoading} className="flex items-center gap-2 px-4 py-2 bg-white border border-blue-300 rounded-lg text-sm font-sans text-blue-700 hover:bg-blue-50 transition disabled:opacity-60">
+									{geoLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <LocateFixed className="w-4 h-4" />}
+									{geoLoading ? "Getting location…" : "Allow Location Access"}
+								</button>
+							)}
+
+							{geoError && <p className="text-orange-600 text-xs mt-2 font-sans">{geoError} — you can set this later from your profile.</p>}
+
+							<input type="hidden" {...register("latitude")} />
+							<input type="hidden" {...register("longitude")} />
 						</div>
 
 						<div className="bg-red-50 rounded-xl p-4 border border-red-100">
@@ -268,9 +263,10 @@ export default function RegisterDonor() {
 						</div>
 
 						<button type="submit" disabled={isSubmitting} className="btn-primary w-full py-3 text-base">
-							{isSubmitting ? "Creating Account..." : "Create Donor Account"}
+							{isSubmitting ? "Creating Account…" : "Create Donor Account"}
 						</button>
 					</form>
+
 					<p className="text-center text-sm text-stone-500 mt-5 font-sans">
 						Already have an account?{" "}
 						<Link to="/login" className="text-crimson hover:underline">
