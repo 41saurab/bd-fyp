@@ -46,7 +46,7 @@ class AdminService {
 		const filter = status ? { status } : {};
 		const orgs = await organizationModel
 			.find(filter)
-			.populate("user", "name email phone createdAt")
+			.populate("user", "name email phone createdAt isActive emailVerified")
 			.sort("-createdAt")
 			.skip((page - 1) * limit)
 			.limit(parseInt(limit));
@@ -65,20 +65,56 @@ class AdminService {
 		}
 
 		org.status = status;
+
 		if (status === "approved") {
-			org.user.isActive = true;
-			org.user.emailVerified = true;
 			org.approvedBy = adminId;
 			org.approvedAt = new Date();
+			org.rejectionReason = undefined;
+
+			await userModel.findByIdAndUpdate(org.user._id, {
+				isActive: true,
+				emailVerified: true,
+			});
+
 			await notificationModel.create({
 				recipient: org.user._id,
-				title: "Organization Approved!",
-				message: `${org.orgName} has been approved. You can now create campaigns.`,
+				title: "Organization Approved! 🎉",
+				message: `${org.orgName} has been approved. You can now create campaigns and post emergency requests.`,
 				type: "approval",
 			});
 		}
+
+		if (status === "rejected") {
+			org.rejectionReason = reason || "No reason provided";
+
+			await userModel.findByIdAndUpdate(org.user._id, {
+				isActive: false,
+			});
+
+			await notificationModel.create({
+				recipient: org.user._id,
+				title: "Organization Application Rejected",
+				message: reason || "Your organization application was not approved.",
+				type: "info",
+			});
+		}
+
+		if (status === "suspended") {
+			await userModel.findByIdAndUpdate(org.user._id, {
+				isActive: false,
+			});
+
+			await notificationModel.create({
+				recipient: org.user._id,
+				title: "Organization Suspended",
+				message: reason || "Your organization account has been suspended. Please contact support.",
+				type: "info",
+			});
+		}
+
 		await org.save();
-		return org;
+
+		return organizationModel.findById(org._id).populate("user", "name email phone isActive emailVerified");
 	}
 
 	async sendOrganizationStatusUpdateEmail(org) {

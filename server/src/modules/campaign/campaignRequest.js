@@ -66,4 +66,7 @@ export const createCampaignDTO = Joi.object({
 	}),
 
 	tags: Joi.alternatives().try(Joi.array(), Joi.string()).optional(),
+
+	latitude: Joi.number().min(-90).max(90).allow(null).optional().label("latitude"),
+	longitude: Joi.number().min(-180).max(180).allow(null).optional().label("longitude"),
 });

@@ -73,6 +73,15 @@ export const registerDonorDTO = Joi.object({
 		"number.min": "Minimum weight to donate blood is 60 kg.",
 		"number.max": "Please enter a realistic weight.",
 	}),
+
+	latitude: Joi.number().min(-90).max(90).allow(null).optional().messages({
+		"number.min": "Latitude must be between -90 and 90.",
+		"number.max": "Latitude must be between -90 and 90.",
+	}),
+	longitude: Joi.number().min(-180).max(180).allow(null).optional().messages({
+		"number.min": "Longitude must be between -180 and 180.",
+		"number.max": "Longitude must be between -180 and 180.",
+	}),
 });
 
 export const loginDTO = Joi.object({
@@ -119,4 +128,13 @@ export const updateDonorDTO = Joi.object({
 	notificationPreferences: Joi.string().optional(),
 
 	medicalConditions: Joi.string().optional(),
+
+	latitude: Joi.number().min(-90).max(90).allow(null).optional().messages({
+		"number.min": "Latitude must be between -90 and 90.",
+		"number.max": "Latitude must be between -90 and 90.",
+	}),
+	longitude: Joi.number().min(-180).max(180).allow(null).optional().messages({
+		"number.min": "Longitude must be between -180 and 180.",
+		"number.max": "Longitude must be between -180 and 180.",
+	}),
 });
