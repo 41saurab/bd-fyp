@@ -13,10 +13,18 @@ const CAMPAIGN_NOTIFY_RADIUS_METERS = 25_000;
 class CampaignService {
 	async getAllCampaigns(query) {
 		const { status, city, bloodType, page = 1, limit = 12 } = query;
+
 		const filter = {};
+
 		if (status) filter.status = status;
-		if (city) filter.city = { $regex: city, $options: "i" };
-		if (bloodType && bloodType !== "All") filter.targetBloodTypes = { $in: [bloodType, "All"] };
+
+		if (city) {
+			filter.city = { $regex: city, $options: "i" };
+		}
+
+		if (bloodType && bloodType !== "All") {
+			filter.targetBloodTypes = { $in: [bloodType, "All"] };
+		}
 
 		const campaigns = await campaignModel
 			.find(filter)
@@ -30,40 +38,45 @@ class CampaignService {
 			.limit(parseInt(limit));
 
 		const total = await campaignModel.countDocuments(filter);
-		return { campaigns, total, pages: Math.ceil(total / limit) };
-	}
 
-	async getNearbyCampaigns(lat, lng, radiusKm = 25, bloodType, status = "active") {
-		const filter = {
-			status,
-			geoLocation: {
-				$near: {
-					$geometry: { type: "Point", coordinates: [parseFloat(lng), parseFloat(lat)] },
-					$maxDistance: radiusKm * 1000,
-				},
-			},
+		return {
+			campaigns,
+			total,
+			pages: Math.ceil(total / limit),
 		};
-		if (bloodType && bloodType !== "All") filter.targetBloodTypes = { $in: [bloodType, "All"] };
-
-		return campaignModel.find(filter).populate({
-			path: "organization",
-			select: "orgName city orgType logo",
-			populate: { path: "user", select: "name" },
-		});
 	}
 
+	// async getCampaignById(id) {
+	// 	const campaign = await campaignModel
+	// 		.findById(id)
+	// 		.populate({ path: "organization", populate: { path: "user", select: "name email" } })
+	// 		.populate("registeredDonors.donor");
+	// 	if (!campaign) {
+	// 		throw {
+	// 			status: httpStatusCode.NOT_FOUND,
+	// 			message: "Campaign not found",
+	// 			statusMsg: httpStatusMsg.CAMPAIGN_NOT_FOUND,
+	// 		};
+	// 	}
+	// 	return campaign;
+	// }
 	async getCampaignById(id) {
 		const campaign = await campaignModel
 			.findById(id)
-			.populate({ path: "organization", populate: { path: "user", select: "name email" } })
+			.populate({
+				path: "organization",
+				populate: { path: "user", select: "name email" },
+			})
 			.populate("registeredDonors.donor");
+
 		if (!campaign) {
 			throw {
-				status: httpStatusCode.NOT_FOUND,
+				status: 404,
 				message: "Campaign not found",
 				statusMsg: httpStatusMsg.CAMPAIGN_NOT_FOUND,
 			};
 		}
+
 		return campaign;
 	}
 
@@ -85,7 +98,13 @@ class CampaignService {
 
 		const { title, description, type, targetBloodTypes, targetUnits, startDate, endDate, venue, city, address, pointsReward, requirements, contactInfo, tags, latitude, longitude } = body;
 
-		const geoLocation = latitude && longitude ? { type: "Point", coordinates: [parseFloat(longitude), parseFloat(latitude)] } : undefined;
+		const geoLocation =
+			latitude != null && longitude != null
+				? {
+						type: "Point",
+						coordinates: [Number(longitude), Number(latitude)],
+					}
+				: undefined;
 
 		const campaign = await campaignModel.create({
 			organization: org._id,
@@ -100,7 +119,7 @@ class CampaignService {
 			city,
 			address,
 			image: imageUrl,
-			geoLocation, // ✅ NEW
+			geoLocation,
 			pointsReward: pointsReward || 10,
 			requirements,
 			contactInfo,
@@ -199,6 +218,19 @@ class CampaignService {
 			};
 		}
 
+		const targetBloodTypes = campaign.targetBloodTypes || [];
+
+		// If campaign has no restriction → allow all
+		const isAllowed = targetBloodTypes.length === 0 || targetBloodTypes.includes("All") || targetBloodTypes.includes(donor.bloodType);
+
+		if (!isAllowed) {
+			throw {
+				status: httpStatusCode.FORBIDDEN,
+				message: `This campaign only accepts ${targetBloodTypes.join(", ")} donors`,
+				statusMsg: "INVALID_BLOOD_TYPE",
+			};
+		}
+
 		const alreadyRegistered = campaign.registeredDonors.find((r) => r.donor.toString() === donor._id.toString());
 		if (alreadyRegistered) {
 			throw {
@@ -225,7 +257,21 @@ class CampaignService {
 		const campaign = await campaignModel.findById(campaignId);
 		const donor = await donorModel.findById(donorId).populate("user");
 
-		const reg = campaign.registeredDonors.find((r) => r.donor.toString() === donorId);
+		if (!campaign) {
+			throw {
+				status: 404,
+				message: "Campaign not found",
+			};
+		}
+
+		if (!donor) {
+			throw {
+				status: 404,
+				message: "Donor not found",
+			};
+		}
+
+		const reg = campaign.registeredDonors.find((r) => r.donor?.toString() === donorId);
 		if (!reg) {
 			throw {
 				status: httpStatusCode.NOT_FOUND,
@@ -233,7 +279,11 @@ class CampaignService {
 				statusMsg: httpStatusMsg.DONOR_NOT_FOUND,
 			};
 		}
-
+		if (reg.status === "donated") {
+			return {
+				message: "Donation already marked",
+			};
+		}
 		reg.status = "donated";
 		campaign.collectedUnits += 1;
 		await campaign.save();
@@ -286,6 +336,59 @@ class CampaignService {
 		}
 		return campaignModel.find({ organization: org._id }).sort("-createdAt");
 	}
+
+	async getNearbyCampaigns({ lat, lng, radius = 25, status = "active", bloodType }) {
+		if (!lat || !lng) {
+			throw {
+				status: 400,
+				message: "Latitude and longitude are required",
+			};
+		}
+
+		const maxDistance = Number(radius) * 1000; // km → meters
+
+		const filter = { status };
+
+		if (bloodType) {
+			filter.targetBloodTypes = bloodType;
+		}
+
+		const campaigns = await campaignModel
+			.find({
+				...filter,
+				geoLocation: {
+					$near: {
+						$geometry: {
+							type: "Point",
+							coordinates: [Number(lng), Number(lat)],
+						},
+						$maxDistance: maxDistance,
+					},
+				},
+			})
+			.populate("organization", "orgName");
+
+		return campaigns;
+	}
+
+	// 	async getNearbyCampaigns(lat, lng, radiusKm = 25, bloodType, status = "active") {
+	// 		const filter = {
+	// 			status,
+	// 			geoLocation: {
+	// 				$near: {
+	// 					$geometry: { type: "Point", coordinates: [parseFloat(lng), parseFloat(lat)] },
+	// 					$maxDistance: radiusKm * 1000,
+	// 				},
+	// 			},
+	// 		};
+	// 		if (bloodType && bloodType !== "All") filter.targetBloodTypes = { $in: [bloodType, "All"] };
+
+	// 		return campaignModel.find(filter).populate({
+	// 			path: "organization",
+	// 			select: "orgName city orgType logo",
+	// 			populate: { path: "user", select: "name" },
+	// 		});
+	// 	}
 }
 
 export const campaignService = new CampaignService();

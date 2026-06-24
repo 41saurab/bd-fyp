@@ -34,17 +34,28 @@ class DonorService {
 			city,
 		});
 
-		const location = latitude && longitude ? { type: "Point", coordinates: [parseFloat(longitude), parseFloat(latitude)] } : undefined;
+		const location =
+			latitude != null && longitude != null
+				? {
+						type: "Point",
+						coordinates: [Number(longitude), Number(latitude)],
+					}
+				: undefined;
 
-		const donor = await donorModel.create({
+		const donorData = {
 			user: user._id,
 			bloodType,
 			city,
 			dateOfBirth,
 			gender,
 			weight,
-			location,
-		});
+		};
+
+		if (location) {
+			donorData.location = location;
+		}
+
+		const donor = await donorModel.create(donorData);
 
 		return {
 			token: signToken(user._id),

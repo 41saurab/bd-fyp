@@ -86,8 +86,9 @@ class EmergencyService {
 		}
 
 		const { patientName, bloodType, unitsNeeded, urgencyLevel, reason, location, city, contactPerson, contactPhone, deadline, additionalNotes, latitude, longitude } = body;
-
-		const geoLocation = latitude && longitude ? { type: "Point", coordinates: [parseFloat(longitude), parseFloat(latitude)] } : undefined;
+		const lat = latitude === "" ? null : latitude;
+		const lng = longitude === "" ? null : longitude;
+		const geoLocation = lat != null && lng != null ? { type: "Point", coordinates: [Number(lng), Number(lat)] } : undefined;
 
 		const request = await emergencyModel.create({
 			organization: org._id,
@@ -102,7 +103,7 @@ class EmergencyService {
 			contactPhone,
 			deadline,
 			additionalNotes,
-			geoLocation, // ✅ NEW
+			geoLocation,
 		});
 
 		const compatible = getCompatibleDonorTypes(bloodType);
@@ -110,25 +111,41 @@ class EmergencyService {
 		let donors = [];
 
 		if (geoLocation) {
-			const nearbyBaseFilter = {
+			// const nearbyBaseFilter = {
+			// 	bloodType: { $in: compatible },
+			// 	"notificationPreferences.emergency": true,
+			// 	availability: true,
+			// 	isEligible: true,
+			// 	location: {
+			// 		$near: {
+			// 			$geometry: geoLocation,
+			// 			$maxDistance: NEARBY_RADIUS_METERS,
+			// 		},
+			// 	},
+			// };
+			const baseFilter = {
 				bloodType: { $in: compatible },
 				"notificationPreferences.emergency": true,
 				availability: true,
 				isEligible: true,
-				location: {
-					$near: {
-						$geometry: geoLocation,
-						$maxDistance: NEARBY_RADIUS_METERS,
-					},
-				},
 			};
 
-			donors = await donorModel.find(nearbyBaseFilter).populate("user", "email name");
+			donors = await donorModel
+				.find({
+					...baseFilter,
+					location: {
+						$near: {
+							$geometry: geoLocation,
+							$maxDistance: NEARBY_RADIUS_METERS,
+						},
+					},
+				})
+				.populate("user", "email name");
 
 			if (donors.length < MIN_NEARBY_DONORS) {
 				donors = await donorModel
 					.find({
-						...nearbyBaseFilter,
+						...baseFilter,
 						location: {
 							$near: {
 								$geometry: geoLocation,
@@ -142,13 +159,13 @@ class EmergencyService {
 			if (donors.length === 0) {
 				donors = await donorModel
 					.find({
-						bloodType: { $in: compatible },
-						"notificationPreferences.emergency": true,
+						...baseFilter,
 						city: { $regex: city, $options: "i" },
 					})
 					.populate("user", "email name");
 			}
 		} else {
+			// CITY ONLY SEARCH
 			donors = await donorModel
 				.find({
 					bloodType: { $in: compatible },
@@ -196,6 +213,7 @@ class EmergencyService {
 
 	async respondToEmergency(requestId, userId) {
 		const request = await emergencyModel.findById(requestId);
+
 		if (!request || request.status !== "active") {
 			throw {
 				status: httpStatusCode.BAD_REQUEST,
@@ -205,7 +223,28 @@ class EmergencyService {
 		}
 
 		const donor = await donorModel.findOne({ user: userId });
+
+		if (!donor) {
+			throw {
+				status: httpStatusCode.NOT_FOUND,
+				message: "Donor profile not found",
+				statusMsg: httpStatusMsg.DONOR_NOT_FOUND,
+			};
+		}
+
+		// ✅ BLOOD TYPE COMPATIBILITY CHECK
+		const isCompatible = request.bloodType === donor.bloodType || request.bloodType === "All";
+
+		if (!isCompatible) {
+			throw {
+				status: httpStatusCode.FORBIDDEN,
+				message: `This emergency requires ${request.bloodType} blood type`,
+				statusMsg: "INCOMPATIBLE_BLOOD_TYPE",
+			};
+		}
+
 		const alreadyResponded = request.respondents.find((r) => r.donor.toString() === donor._id.toString());
+
 		if (alreadyResponded) {
 			throw {
 				status: httpStatusCode.CONFLICT,
@@ -218,11 +257,12 @@ class EmergencyService {
 		await request.save();
 
 		const org = await organizationModel.findById(request.organization).populate("user");
+
 		if (org && org.user) {
 			await notificationModel.create({
 				recipient: org.user._id,
 				title: "Donor Responded to Emergency",
-				message: `A donor has responded to your emergency blood request for ${request.bloodType}`,
+				message: `A donor has responded for ${request.bloodType} emergency`,
 				type: "info",
 			});
 		}
