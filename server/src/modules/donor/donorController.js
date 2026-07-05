@@ -51,8 +51,6 @@ class DonorController {
 		}
 	};
 
-	// ─── Donor Profile ───────────────────────────────────────────────────────
-
 	getDonorProfile = async (req, res, next) => {
 		try {
 			const data = await donorService.getDonorProfile(req.loggedInUser._id);

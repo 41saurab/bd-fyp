@@ -5,7 +5,6 @@ import { checkPermission } from "../../middlewares/rbacMiddleware.js";
 
 const router = express.Router();
 
-// All admin routes require auth + admin role
 router.use(checkLogin, checkPermission(["admin"]));
 
 router.get("/stats", adminController.getStats);

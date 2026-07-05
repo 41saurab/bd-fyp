@@ -62,7 +62,6 @@ export default function Emergency() {
 		const turningOn = !nearbyMode;
 		setNearbyMode(turningOn);
 
-		// Only request location if turning ON and we don't have coords yet
 		if (turningOn && !coords) {
 			requestLocation();
 		}

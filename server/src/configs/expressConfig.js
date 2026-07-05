@@ -11,7 +11,6 @@ import { httpStatusMsg } from "../constants/httpStatusMsg.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Connect to database and seed admin
 dbConnection().then(async () => {
 	const { userModel } = await import("../modules/userModel.js");
 	const adminEmail = process.env.ADMIN_EMAIL || "admin@bloodbridge.com";
@@ -23,7 +22,7 @@ dbConnection().then(async () => {
 			password: process.env.ADMIN_PASSWORD || "Admin@123",
 			role: "admin",
 		});
-		console.log(`✅ Admin seeded: ${adminEmail}`);
+		console.log(`Admin seeded: ${adminEmail}`);
 	}
 });
 

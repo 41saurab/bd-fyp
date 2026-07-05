@@ -165,7 +165,6 @@ class EmergencyService {
 					.populate("user", "email name");
 			}
 		} else {
-			// CITY ONLY SEARCH
 			donors = await donorModel
 				.find({
 					bloodType: { $in: compatible },
@@ -232,7 +231,6 @@ class EmergencyService {
 			};
 		}
 
-		// ✅ BLOOD TYPE COMPATIBILITY CHECK
 		const isCompatible = request.bloodType === donor.bloodType || request.bloodType === "All";
 
 		if (!isCompatible) {

@@ -17,7 +17,6 @@ class EmergencyController {
 		}
 	};
 
-	// ✅ NEW: GET /emergencies/nearby?lat=27.7&lng=85.3&radius=20&bloodType=A+
 	getNearbyEmergencies = async (req, res, next) => {
 		try {
 			const { lat, lng, radius = 50, bloodType } = req.query;

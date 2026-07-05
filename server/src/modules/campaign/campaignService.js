@@ -103,7 +103,7 @@ class CampaignService {
 				? {
 						type: "Point",
 						coordinates: [Number(longitude), Number(latitude)],
-					}
+				  }
 				: undefined;
 
 		const campaign = await campaignModel.create({
@@ -220,7 +220,6 @@ class CampaignService {
 
 		const targetBloodTypes = campaign.targetBloodTypes || [];
 
-		// If campaign has no restriction → allow all
 		const isAllowed = targetBloodTypes.length === 0 || targetBloodTypes.includes("All") || targetBloodTypes.includes(donor.bloodType);
 
 		if (!isAllowed) {
@@ -288,7 +287,6 @@ class CampaignService {
 		campaign.collectedUnits += 1;
 		await campaign.save();
 
-		// Update donor stats
 		donor.totalDonations += 1;
 		donor.lastDonationDate = new Date();
 		donor.points += campaign.pointsReward || 10;
@@ -345,7 +343,7 @@ class CampaignService {
 			};
 		}
 
-		const maxDistance = Number(radius) * 1000; // km → meters
+		const maxDistance = Number(radius) * 1000;
 
 		const filter = { status };
 

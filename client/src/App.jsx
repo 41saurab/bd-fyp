@@ -2,7 +2,6 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
-// Pages
 import Landing from './pages/public/Landing';
 import Login from './pages/public/Login';
 import RegisterDonor from './pages/public/RegisterDonor';
@@ -15,14 +14,12 @@ import Organizations from './pages/public/Organizations';
 import Leaderboard from './pages/public/Leaderboard';
 import HowItWorks from './pages/public/HowItWorks';
 
-// Donor pages
 import DonorDashboard from './pages/donor/Dashboard';
 import DonorProfile from './pages/donor/Profile';
 import DonorDonations from './pages/donor/Donations';
 import DonorBadges from './pages/donor/Badges';
 import DonorNotifications from './pages/donor/Notifications';
 
-// Organization pages
 import OrgDashboard from './pages/organization/Dashboard';
 import OrgProfile from './pages/organization/Profile';
 import OrgCampaigns from './pages/organization/Campaigns';
@@ -31,7 +28,6 @@ import OrgEmergency from './pages/organization/Emergency';
 import CreateEmergency from './pages/organization/CreateEmergency';
 import OrgInventory from './pages/organization/Inventory';
 
-// Admin pages
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminOrganizations from './pages/admin/Organizations';
 import AdminDonors from './pages/admin/Donors';
@@ -39,7 +35,6 @@ import AdminCampaigns from './pages/admin/Campaigns';
 import AdminEmergency from './pages/admin/Emergency';
 import AdminBroadcast from './pages/admin/Broadcast';
 
-// Components
 import Navbar from './components/common/Navbar';
 import Footer from './components/common/Footer';
 import LoadingScreen from './components/common/LoadingScreen';
@@ -72,7 +67,6 @@ function AppContent() {
       <Navbar />
       <main className="flex-1">
         <Routes>
-          {/* Public */}
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
           <Route path="/register/donor" element={<PublicOnlyRoute><RegisterDonor /></PublicOnlyRoute>} />
@@ -85,14 +79,12 @@ function AppContent() {
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/how-it-works" element={<HowItWorks />} />
 
-          {/* Donor */}
           <Route path="/donor/dashboard" element={<ProtectedRoute role="donor"><DonorDashboard /></ProtectedRoute>} />
           <Route path="/donor/profile" element={<ProtectedRoute role="donor"><DonorProfile /></ProtectedRoute>} />
           <Route path="/donor/donations" element={<ProtectedRoute role="donor"><DonorDonations /></ProtectedRoute>} />
           <Route path="/donor/badges" element={<ProtectedRoute role="donor"><DonorBadges /></ProtectedRoute>} />
           <Route path="/donor/notifications" element={<ProtectedRoute role="donor"><DonorNotifications /></ProtectedRoute>} />
 
-          {/* Organization */}
           <Route path="/organization/dashboard" element={<ProtectedRoute role="organization"><OrgDashboard /></ProtectedRoute>} />
           <Route path="/organization/profile" element={<ProtectedRoute role="organization"><OrgProfile /></ProtectedRoute>} />
           <Route path="/organization/campaigns" element={<ProtectedRoute role="organization"><OrgCampaigns /></ProtectedRoute>} />
@@ -101,7 +93,6 @@ function AppContent() {
           <Route path="/organization/emergency/create" element={<ProtectedRoute role="organization"><CreateEmergency /></ProtectedRoute>} />
           <Route path="/organization/inventory" element={<ProtectedRoute role="organization"><OrgInventory /></ProtectedRoute>} />
 
-          {/* Admin */}
           <Route path="/admin/dashboard" element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
           <Route path="/admin/organizations" element={<ProtectedRoute role="admin"><AdminOrganizations /></ProtectedRoute>} />
           <Route path="/admin/donors" element={<ProtectedRoute role="admin"><AdminDonors /></ProtectedRoute>} />

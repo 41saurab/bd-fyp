@@ -47,18 +47,15 @@ export default function RegisterDonor() {
 	}, [coords, locationShared, setValue]);
 
 	const onSubmit = async (data) => {
-		// 1. validate FIRST
 		if (!selectedBT) {
 			setBtTouched(true);
 			return toast.error("Please select your blood type before continuing");
 		}
 
-		// 2. sanitize values
+		// sanitize latitude and longitude to be numbers or undefined
 		const latitude = data.latitude !== undefined && data.latitude !== "" ? Number(data.latitude) : undefined;
-
 		const longitude = data.longitude !== undefined && data.longitude !== "" ? Number(data.longitude) : undefined;
 
-		// 3. build payload AFTER validation
 		const payload = {
 			...data,
 			bloodType: selectedBT,

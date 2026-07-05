@@ -28,11 +28,9 @@ export const AuthProvider = ({ children }) => {
   const fetchMe = async () => {
     try {
       const { data } = await axios.get('/api/auth/me');
-      // Interceptor unwraps envelope → data is now { user, profile }
       setUser(data.user);
       setProfile(data.profile);
     } catch {
-      // Token is invalid/expired/malformed — clear it silently
       localStorage.removeItem('token');
       delete axios.defaults.headers.common['Authorization'];
     } finally {
@@ -42,7 +40,6 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const { data } = await axios.post('/api/auth/login', { email, password });
-    // Interceptor unwraps envelope → data is now { token, user, profile }
     localStorage.setItem('token', data.token);
     axios.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
     setUser(data.user);
