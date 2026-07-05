@@ -51,7 +51,6 @@ class DonorController {
 		}
 	};
 
-	// ─── Donor Profile ───────────────────────────────────────────────────────
 
 	getDonorProfile = async (req, res, next) => {
 		try {

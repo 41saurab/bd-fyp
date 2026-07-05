@@ -45,11 +45,8 @@ export default function Landing() {
 
 	return (
 		<div className="overflow-hidden">
-			{/* Hero Section */}
 			<section className="relative min-h-[92vh] flex items-center overflow-hidden">
-				{/* Background */}
 				<div className="absolute inset-0 bg-gradient-to-br from-stone-50 via-red-50/30 to-stone-50">
-					{/* Floating drops */}
 					{[...Array(8)].map((_, i) => (
 						<BloodDrop
 							key={i}
@@ -101,10 +98,8 @@ export default function Landing() {
 						</div>
 					</motion.div>
 
-					{/* Visual */}
 					<motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8, delay: 0.2 }} className="hidden lg:flex items-center justify-center">
 						<div className="relative w-96 h-96">
-							{/* Center drop */}
 							<div className="absolute inset-0 flex items-center justify-center">
 								<BloodDrop className="w-48 h-48 fill-crimson/20 animate-float" />
 							</div>
@@ -114,7 +109,6 @@ export default function Landing() {
 							<div className="absolute inset-16 flex items-center justify-center">
 								<BloodDrop className="w-28 h-28 fill-crimson animate-heartbeat" />
 							</div>
-							{/* Blood type orbits */}
 							{bloodTypes.map((bt, i) => {
 								const angle = (i / 8) * 2 * Math.PI;
 								const x = 50 + 42 * Math.cos(angle);
@@ -130,7 +124,6 @@ export default function Landing() {
 				</div>
 			</section>
 
-			{/* Stats */}
 			<section className="bg-crimson py-12">
 				<div className="max-w-7xl mx-auto px-6">
 					<div className="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -145,7 +138,6 @@ export default function Landing() {
 				</div>
 			</section>
 
-			{/* Active Emergencies Banner */}
 			{emergencies.length > 0 && (
 				<section className="bg-stone-900 py-8 border-y border-stone-800">
 					<div className="max-w-7xl mx-auto px-6">
@@ -175,7 +167,6 @@ export default function Landing() {
 				</section>
 			)}
 
-			{/* Features */}
 			<section className="py-24 bg-white">
 				<div className="max-w-7xl mx-auto px-6">
 					<div className="text-center mb-16">
@@ -200,7 +191,6 @@ export default function Landing() {
 				</div>
 			</section>
 
-			{/* Active Campaigns */}
 			{campaigns.length > 0 && (
 				<section className="py-20 bg-stone-50">
 					<div className="max-w-7xl mx-auto px-6">
@@ -245,7 +235,6 @@ export default function Landing() {
 				</section>
 			)}
 
-			{/* How it Works */}
 			<section className="py-24 bg-white">
 				<div className="max-w-7xl mx-auto px-6">
 					<div className="text-center mb-16">
@@ -271,7 +260,6 @@ export default function Landing() {
 				</div>
 			</section>
 
-			{/* CTA */}
 			<section className="bg-gradient-to-br from-blood-900 via-crimson to-blood-700 py-20">
 				<div className="max-w-4xl mx-auto px-6 text-center">
 					<motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}>

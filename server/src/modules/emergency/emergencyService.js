@@ -102,7 +102,7 @@ class EmergencyService {
 			contactPhone,
 			deadline,
 			additionalNotes,
-			geoLocation, // ✅ NEW
+			geoLocation,
 		});
 
 		const compatible = getCompatibleDonorTypes(bloodType);

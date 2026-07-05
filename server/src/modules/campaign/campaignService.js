@@ -100,7 +100,7 @@ class CampaignService {
 			city,
 			address,
 			image: imageUrl,
-			geoLocation, // ✅ NEW
+			geoLocation,
 			pointsReward: pointsReward || 10,
 			requirements,
 			contactInfo,
@@ -238,7 +238,6 @@ class CampaignService {
 		campaign.collectedUnits += 1;
 		await campaign.save();
 
-		// Update donor stats
 		donor.totalDonations += 1;
 		donor.lastDonationDate = new Date();
 		donor.points += campaign.pointsReward || 10;

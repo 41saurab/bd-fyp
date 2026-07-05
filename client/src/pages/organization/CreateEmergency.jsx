@@ -149,7 +149,7 @@ export default function CreateEmergency() {
 						<input
 							{...register("deadline", {
 								validate: (value) => {
-									if (!value) return true; // optional field
+									if (!value) return true; 
 									if (new Date(value) < new Date()) return "Deadline cannot be in the past";
 									return true;
 								},

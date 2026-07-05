@@ -1,11 +1,9 @@
 export const httpStatusMsg = {
-    // General
     SUCCESS: "success",
     ERROR: "error",
     NOT_FOUND: "not_found",
     BAD_REQUEST: "bad_request",
 
-    // Auth
     UNAUTHENTICATED: "unauthenticated",
     UNAUTHORIZED: "unauthorized",
     ACCESS_DENIED: "access_denied",
@@ -15,19 +13,16 @@ export const httpStatusMsg = {
     INVALID_CREDENTIALS: "invalid_credentials",
     ACCOUNT_DEACTIVATED: "account_deactivated",
 
-    // Validation
     VALIDATION_FAILED: "validation_failed",
     INVALID_INPUT: "invalid_input",
     MISSING_FIELDS: "missing_fields",
 
-    // Resource
     ALREADY_EXISTS: "already_exists",
     RESOURCE_NOT_FOUND: "resource_not_found",
     RESOURCE_CREATED: "resource_created",
     RESOURCE_UPDATED: "resource_updated",
     RESOURCE_DELETED: "resource_deleted",
 
-    // User / Donor / Org specific
     USER_NOT_FOUND: "user_not_found",
     DONOR_NOT_FOUND: "donor_not_found",
     ORG_NOT_FOUND: "organization_not_found",
@@ -39,14 +34,12 @@ export const httpStatusMsg = {
     ALREADY_RESPONDED: "already_responded",
     DONOR_INELIGIBLE: "donor_ineligible",
 
-    // Campaign / Emergency
     CAMPAIGN_NOT_FOUND: "campaign_not_found",
     CAMPAIGN_CLOSED: "campaign_not_accepting_registrations",
     EMERGENCY_NOT_FOUND: "emergency_request_not_found",
     EMERGENCY_UNAVAILABLE: "emergency_request_not_available",
     REQUEST_FULFILLED: "request_already_fulfilled",
 
-    // Server
     INTERNAL_ERROR: "internal_server_error",
     SERVICE_UNAVAILABLE: "service_unavailable",
 };

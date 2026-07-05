@@ -2,7 +2,6 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
-// Pages
 import Landing from './pages/public/Landing';
 import Login from './pages/public/Login';
 import RegisterDonor from './pages/public/RegisterDonor';
@@ -15,14 +14,12 @@ import Organizations from './pages/public/Organizations';
 import Leaderboard from './pages/public/Leaderboard';
 import HowItWorks from './pages/public/HowItWorks';
 
-// Donor pages
 import DonorDashboard from './pages/donor/Dashboard';
 import DonorProfile from './pages/donor/Profile';
 import DonorDonations from './pages/donor/Donations';
 import DonorBadges from './pages/donor/Badges';
 import DonorNotifications from './pages/donor/Notifications';
 
-// Organization pages
 import OrgDashboard from './pages/organization/Dashboard';
 import OrgProfile from './pages/organization/Profile';
 import OrgCampaigns from './pages/organization/Campaigns';
@@ -31,7 +28,6 @@ import OrgEmergency from './pages/organization/Emergency';
 import CreateEmergency from './pages/organization/CreateEmergency';
 import OrgInventory from './pages/organization/Inventory';
 
-// Admin pages
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminOrganizations from './pages/admin/Organizations';
 import AdminDonors from './pages/admin/Donors';
@@ -39,7 +35,6 @@ import AdminCampaigns from './pages/admin/Campaigns';
 import AdminEmergency from './pages/admin/Emergency';
 import AdminBroadcast from './pages/admin/Broadcast';
 
-// Components
 import Navbar from './components/common/Navbar';
 import Footer from './components/common/Footer';
 import LoadingScreen from './components/common/LoadingScreen';

@@ -6,17 +6,13 @@ import uploadFile from "../../middlewares/uploadFileMiddleware.js";
 
 const router = express.Router();
 
-// Public routes
 router.get("/", campaignController.getAllCampaigns);
 router.get("/org/mine", checkLogin, checkPermission(["organization"]), campaignController.getOrgCampaigns);
 
-// Organization routes
 router.post("/", checkLogin, checkPermission(["organization"]), uploadFile("image").single("image"), campaignController.createCampaign);
 
-// Donor routes
 router.post("/:id/register", checkLogin, checkPermission(["donor"]), campaignController.registerForCampaign);
 
-// Mark donation complete
 router.patch("/:id/donors/:donorId/donate", checkLogin, checkPermission(["organization"]), campaignController.markDonation);
 
 router.get("/:id", campaignController.getCampaignById);
