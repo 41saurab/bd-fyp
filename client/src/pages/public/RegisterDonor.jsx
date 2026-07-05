@@ -40,26 +40,40 @@ export default function RegisterDonor() {
 
 	React.useEffect(() => {
 		if (coords && !locationShared) {
-			setValue("latitude", coords.latitude);
-			setValue("longitude", coords.longitude);
+			setValue("latitude", Number(coords.latitude));
+			setValue("longitude", Number(coords.longitude));
 			setLocationShared(true);
 		}
 	}, [coords, locationShared, setValue]);
 
 	const onSubmit = async (data) => {
+		// 1. validate FIRST
 		if (!selectedBT) {
 			setBtTouched(true);
 			return toast.error("Please select your blood type before continuing");
 		}
+
+		// 2. sanitize values
+		const latitude = data.latitude !== undefined && data.latitude !== "" ? Number(data.latitude) : undefined;
+
+		const longitude = data.longitude !== undefined && data.longitude !== "" ? Number(data.longitude) : undefined;
+
+		// 3. build payload AFTER validation
+		const payload = {
+			...data,
+			bloodType: selectedBT,
+			latitude,
+			longitude,
+		};
+
 		try {
-			await axios.post("/api/auth/register/donor", { ...data, bloodType: selectedBT });
+			await axios.post("/api/auth/register/donor", payload);
 			toast.success("Account created! Please login to continue.");
 			navigate("/login");
 		} catch (err) {
 			toast.error(err.response?.data?.message || "Registration failed. Please try again.");
 		}
 	};
-
 	return (
 		<div className="min-h-screen bg-stone-50 py-12 px-4">
 			<div className="max-w-2xl mx-auto">
@@ -250,9 +264,8 @@ export default function RegisterDonor() {
 							)}
 
 							{geoError && <p className="text-orange-600 text-xs mt-2 font-sans">{geoError} — you can set this later from your profile.</p>}
-
-							<input type="hidden" {...register("latitude")} />
-							<input type="hidden" {...register("longitude")} />
+							{/* <input type="hidden" {...register("latitude")} />
+							<input type="hidden" {...register("longitude")} /> */}
 						</div>
 
 						<div className="bg-red-50 rounded-xl p-4 border border-red-100">

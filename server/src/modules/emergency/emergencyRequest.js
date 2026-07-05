@@ -13,6 +13,6 @@ export const createEmergencyDTO = Joi.object({
 	deadline: Joi.date().allow(null).optional().label("deadline"),
 	additionalNotes: Joi.string().allow("", null).optional().label("additionalNotes"),
 
-	latitude: Joi.number().min(-90).max(90).allow(null).optional().label("latitude"),
-	longitude: Joi.number().min(-180).max(180).allow(null).optional().label("longitude"),
-});
+	latitude: Joi.number().min(-90).max(90).allow(null, "").optional().label("latitude"),
+	longitude: Joi.number().min(-180).max(180).allow(null, "").optional().label("longitude"),
+}).options({ convert: true });

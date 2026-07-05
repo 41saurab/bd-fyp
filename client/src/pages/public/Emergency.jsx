@@ -18,27 +18,35 @@ export default function Emergency() {
 	const [loading, setLoading] = useState(true);
 	const [filter, setFilter] = useState({ bloodType: "", city: "" });
 	const [nearbyMode, setNearbyMode] = useState(false);
+	const [radius, setRadius] = useState(10);
 	const { coords, loading: geoLoading, error: geoError, request: requestLocation } = useGeolocation();
 
 	const fetchEmergencies = useCallback(async () => {
 		setLoading(true);
+
 		try {
-			let data;
-			if (nearbyMode && coords) {
+			let res;
+
+			if (nearbyMode && coords?.latitude && coords?.longitude) {
 				const params = new URLSearchParams({
 					lat: coords.latitude,
 					lng: coords.longitude,
-					radius,
+					radius: radius.toString(),
 					...(filter.bloodType ? { bloodType: filter.bloodType } : {}),
 				});
-				const res = await axios.get(`/api/emergency/nearby?${params}`);
-				data = res.data.data || [];
+
+				res = await axios.get(`/api/emergency/nearby?${params}`);
 			} else {
-				const params = new URLSearchParams({ status: "active", ...filter });
-				const res = await axios.get(`/api/emergency?${params}`);
-				data = res.data.data || res.data || [];
+				const params = new URLSearchParams({
+					status: "active",
+					...(filter.bloodType ? { bloodType: filter.bloodType } : {}),
+					...(filter.city ? { city: filter.city } : {}),
+				});
+
+				res = await axios.get(`/api/emergency?${params}`);
 			}
-			setRequests(data);
+
+			setRequests(res.data.data || res.data || []);
 		} catch {
 			setRequests([]);
 		} finally {
@@ -49,10 +57,15 @@ export default function Emergency() {
 	useEffect(() => {
 		fetchEmergencies();
 	}, [fetchEmergencies]);
-
+	console.log(requests.length);
 	const handleNearbyToggle = () => {
-		if (!nearbyMode && !coords) requestLocation();
-		setNearbyMode((v) => !v);
+		const turningOn = !nearbyMode;
+		setNearbyMode(turningOn);
+
+		// Only request location if turning ON and we don't have coords yet
+		if (turningOn && !coords) {
+			requestLocation();
+		}
 	};
 
 	return (
@@ -108,71 +121,67 @@ export default function Emergency() {
 				</div>
 			)}
 
-			{nearbyMode && geoLoading && (
-				<div className="flex items-center justify-center gap-3 py-16 text-stone-400 font-sans">
-					<Loader2 className="w-5 h-5 animate-spin" />
-					Getting your location…
-				</div>
-			)}
-
-			{!geoLoading && (
-				<>
-					{loading ? (
-						<div className="space-y-4">
-							{[...Array(3)].map((_, i) => (
-								<div key={i} className="card p-6 animate-pulse h-32" />
-							))}
-						</div>
-					) : requests.length === 0 ? (
-						<div className="text-center py-20">
-							<div className="text-5xl mb-4">✅</div>
-							<p className="text-stone-500 font-body text-lg">{nearbyMode ? `No active emergencies within ${radius} km of your location` : "No active emergency requests right now"}</p>
-							{nearbyMode && (
-								<button onClick={() => setRadius((r) => Math.min(r * 2, 100))} className="mt-4 text-crimson text-sm font-sans hover:underline">
-									Expand search radius
-								</button>
-							)}
-						</div>
-					) : (
-						<div className="space-y-4">
-							{requests.map((req) => (
-								<Link key={req._id} to={`/emergency/${req._id}`} className={`block card border-l-4 p-6 hover:shadow-blood transition-all duration-300 ${URGENCY_COLORS[req.urgencyLevel] || URGENCY_COLORS.urgent}`}>
-									<div className="flex items-start justify-between gap-4">
-										<div className="flex items-start gap-4">
-											<div className="w-16 h-16 rounded-2xl bg-crimson flex items-center justify-center flex-shrink-0 emergency-pulse">
-												<span className="text-white font-bold font-sans text-lg">{req.bloodType}</span>
-											</div>
-											<div>
-												<div className="flex items-center gap-2 mb-1">
-													<span className={`text-xs font-sans font-bold uppercase px-2 py-0.5 rounded-full ${req.urgencyLevel === "critical" ? "bg-red-600 text-white" : "bg-orange-500 text-white"}`}>{req.urgencyLevel}</span>
-													<span className="text-xs text-stone-400 font-sans">{formatDistanceToNow(new Date(req.createdAt), { addSuffix: true })}</span>
-												</div>
-												<h3 className="font-display font-semibold text-stone-800">{req.organization?.orgName || "Hospital"}</h3>
-												<p className="text-sm text-stone-500 font-sans">{req.reason}</p>
-												<div className="flex flex-wrap gap-4 mt-2">
-													<div className="flex items-center gap-1.5 text-xs text-stone-400 font-sans">
-														<MapPin className="w-3.5 h-3.5 text-crimson" />
-														{req.location}, {req.city}
-													</div>
-													<div className="flex items-center gap-1.5 text-xs text-stone-400 font-sans">
-														<Phone className="w-3.5 h-3.5 text-crimson" />
-														{req.contactPhone}
-													</div>
-												</div>
-											</div>
+			<>
+				{geoLoading && nearbyMode ? (
+					<div className="flex items-center justify-center gap-3 py-16 text-stone-400 font-sans">
+						<Loader2 className="w-5 h-5 animate-spin" />
+						Getting your location…
+					</div>
+				) : loading ? (
+					<div className="space-y-4">
+						{[...Array(3)].map((_, i) => (
+							<div key={i} className="card p-6 animate-pulse h-32" />
+						))}
+					</div>
+				) : requests.length === 0 ? (
+					<div className="text-center py-20">
+						<div className="text-5xl mb-4">✅</div>
+						<p className="text-stone-500 font-body text-lg">{nearbyMode ? `No active emergencies within ${radius} km of your location` : "No active emergency requests right now"}</p>
+						{nearbyMode && (
+							<button onClick={() => setRadius((r) => Math.min(r * 2, 100))} className="mt-4 text-crimson text-sm font-sans hover:underline">
+								Expand search radius
+							</button>
+						)}
+					</div>
+				) : (
+					<div className="space-y-4">
+						{requests.map((req) => (
+							<Link key={req._id} to={`/emergency/${req._id}`} className={`block card border-l-4 p-6 hover:shadow-blood transition-all duration-300 ${URGENCY_COLORS[req.urgencyLevel] || URGENCY_COLORS.urgent}`}>
+								<div className="flex items-start justify-between gap-4">
+									<div className="flex items-start gap-4">
+										<div className="w-16 h-16 rounded-2xl bg-crimson flex items-center justify-center flex-shrink-0 emergency-pulse">
+											<span className="text-white font-bold font-sans text-lg">{req.bloodType}</span>
 										</div>
-										<div className="text-right flex-shrink-0">
-											<p className="text-2xl font-display font-bold text-crimson">{req.unitsNeeded}</p>
-											<p className="text-xs text-stone-400 font-sans">units needed</p>
-											<p className="text-xs text-green-600 font-sans mt-1">{req.respondents?.length || 0} responding</p>
+										<div>
+											<div className="flex items-center gap-2 mb-1">
+												<span className={`text-xs font-sans font-bold uppercase px-2 py-0.5 rounded-full ${req.urgencyLevel === "critical" ? "bg-red-600 text-white" : "bg-orange-500 text-white"}`}>{req.urgencyLevel}</span>
+												<span className="text-xs text-stone-400 font-sans">{formatDistanceToNow(new Date(req.createdAt), { addSuffix: true })}</span>
+											</div>
+											<h3 className="font-display font-semibold text-stone-800">{req.organization?.orgName || "Hospital"}</h3>
+											<p className="text-sm text-stone-500 font-sans">{req.reason}</p>
+											<div className="flex flex-wrap gap-4 mt-2">
+												<div className="flex items-center gap-1.5 text-xs text-stone-400 font-sans">
+													<MapPin className="w-3.5 h-3.5 text-crimson" />
+													{req.location}, {req.city}
+												</div>
+												<div className="flex items-center gap-1.5 text-xs text-stone-400 font-sans">
+													<Phone className="w-3.5 h-3.5 text-crimson" />
+													{req.contactPhone}
+												</div>
+											</div>
 										</div>
 									</div>
-								</Link>
-							))}
-						</div>
-					)}
-				</>
-			)}
+									<div className="text-right flex-shrink-0">
+										<p className="text-2xl font-display font-bold text-crimson">{req.unitsNeeded}</p>
+										<p className="text-xs text-stone-400 font-sans">units needed</p>
+										<p className="text-xs text-green-600 font-sans mt-1">{req.respondents?.length || 0} responding</p>
+									</div>
+								</div>
+							</Link>
+						))}
+					</div>
+				)}
+			</>
 		</div>
 	);
 }
