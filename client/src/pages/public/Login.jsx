@@ -32,7 +32,7 @@ export default function Login() {
 			const serverMsg = err.response?.data?.message;
 			// Provide a clear, specific error based on the server response
 			if (serverMsg === "Account deactivated") {
-				toast.error("Your account has been deactivated. Please contact support.");
+				toast.error("Your account has not been activated. Please contact support.");
 			} else if (serverMsg === "Account pending approval") {
 				toast.error("Your organization account is pending admin approval. You'll be notified by email once approved.");
 			} else if (serverMsg === "Invalid credentials") {
