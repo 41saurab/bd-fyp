@@ -74,11 +74,14 @@ export const registerDonorDTO = Joi.object({
 		"number.max": "Please enter a realistic weight.",
 	}),
 
-	latitude: Joi.number().min(-90).max(90).allow(null).optional().messages({
+	latitude: Joi.number().min(-90).max(90).optional().messages({
+		"number.base": "Latitude must be a number.",
 		"number.min": "Latitude must be between -90 and 90.",
 		"number.max": "Latitude must be between -90 and 90.",
 	}),
-	longitude: Joi.number().min(-180).max(180).allow(null).optional().messages({
+
+	longitude: Joi.number().min(-180).max(180).optional().messages({
+		"number.base": "Longitude must be a number.",
 		"number.min": "Longitude must be between -180 and 180.",
 		"number.max": "Longitude must be between -180 and 180.",
 	}),

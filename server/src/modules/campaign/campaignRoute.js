@@ -13,6 +13,7 @@ router.get("/org/mine", checkLogin, checkPermission(["organization"]), campaignC
 // Organization routes
 router.post("/", checkLogin, checkPermission(["organization"]), uploadFile("image").single("image"), campaignController.createCampaign);
 
+router.get("/nearby", campaignController.getNearbyCampaigns);
 // Donor routes
 router.post("/:id/register", checkLogin, checkPermission(["donor"]), campaignController.registerForCampaign);
 
