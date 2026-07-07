@@ -38,14 +38,9 @@ export default function EmergencyDetail() {
 		}
 	};
 
-	// The backend already computes this correctly by comparing Donor ids
-	// (req.hasResponded); respondents[].donor is a Donor _id, not a User _id,
-	// so comparing it against user._id here would essentially never match.
 	const hasResponded = req?.hasResponded ?? false;
 	const respondentCount = req?.respondentCount ?? req?.respondents?.length ?? 0;
-	// Only present when the viewer is authorized (the owning org, or an
-	// admin) — the backend strips full respondent identities for everyone
-	// else to avoid leaking donor names/phone numbers publicly.
+
 	const canSeeRespondents = Array.isArray(req?.respondents);
 	const urgencyColors = { critical: "from-red-900 to-red-700", urgent: "from-blood-800 to-crimson", moderate: "from-orange-700 to-orange-500" };
 
@@ -143,7 +138,9 @@ export default function EmergencyDetail() {
 							<Zap className="w-4 h-4" />
 							<p className="font-sans font-semibold text-stone-700">+{req.pointsReward || 15} Points when you donate</p>
 						</div>
-						<p className="text-sm font-sans text-stone-500 mb-3">{respondentCount} donor{respondentCount === 1 ? "" : "s"} {respondentCount === 1 ? "has" : "have"} responded</p>
+						<p className="text-sm font-sans text-stone-500 mb-3">
+							{respondentCount} donor{respondentCount === 1 ? "" : "s"} {respondentCount === 1 ? "has" : "have"} responded
+						</p>
 						{/* Donate button — donors only. Orgs/admins see the roster below
 						    instead; guests get a login prompt. The role check used to
 						    live only inside handleRespond(), so the button itself was

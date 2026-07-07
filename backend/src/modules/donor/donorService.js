@@ -39,7 +39,7 @@ class DonorService {
 				? {
 						type: "Point",
 						coordinates: [Number(longitude), Number(latitude)],
-					}
+				  }
 				: undefined;
 
 		const donorData = {
@@ -137,12 +137,7 @@ class DonorService {
 	}
 
 	async getDonorProfile(userId) {
-		const donor = await donorModel
-			.findOne({ user: userId })
-			.populate("user", "name email phone city")
-			.populate("donationHistory.campaign", "title startDate")
-			.populate("donationHistory.emergency", "patientName bloodType urgencyLevel")
-			.populate("donationHistory.organization", "orgName");
+		const donor = await donorModel.findOne({ user: userId }).populate("user", "name email phone city").populate("donationHistory.campaign", "title startDate").populate("donationHistory.emergency", "patientName bloodType urgencyLevel").populate("donationHistory.organization", "orgName");
 
 		if (!donor) {
 			throw {
@@ -183,8 +178,6 @@ class DonorService {
 				coordinates: [parseFloat(longitude), parseFloat(latitude)],
 			};
 		} else if (Object.prototype.hasOwnProperty.call(body, "latitude") && latitude == null) {
-			// Explicit null (from the "Clear location" action) unsets it.
-			// Previously there was no way to remove a saved location once set.
 			donor.location = undefined;
 		}
 

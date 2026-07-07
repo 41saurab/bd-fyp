@@ -82,8 +82,6 @@ export const updateCampaignDTO = Joi.object({
 	type: Joi.string().valid("regular", "emergency", "special").optional(),
 	targetBloodTypes: Joi.alternatives().try(Joi.array(), Joi.string()).optional(),
 	targetUnits: Joi.number().min(1).max(10000).optional(),
-	// No .min("now") here — an in-progress campaign's startDate is
-	// legitimately in the past; that shouldn't block editing other fields.
 	startDate: Joi.date().optional(),
 	endDate: Joi.date().optional(),
 	venue: Joi.string().max(200).optional(),

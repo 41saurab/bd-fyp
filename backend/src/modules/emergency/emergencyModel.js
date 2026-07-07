@@ -19,9 +19,7 @@ const emergencySchema = new mongoose.Schema({
 		enum: ["critical", "urgent", "moderate"],
 		default: "urgent",
 	},
-	// Emergency donations reward more points than a routine campaign donation
-	// since they're time-critical and unscheduled for the donor. Mirrors
-	// campaign.pointsReward but derived from urgency rather than set by the org.
+
 	pointsReward: { type: Number, default: 15 },
 	reason: { type: String, required: true },
 	location: { type: String, required: true },

@@ -27,9 +27,6 @@ const NEARBY_RADIUS_METERS = 10_000;
 const FALLBACK_RADIUS_METERS = 50_000;
 const MIN_NEARBY_DONORS = 5;
 
-// Emergency donations pay more points than a routine campaign donation —
-// they're unscheduled and time-critical for the donor, and the more urgent
-// the request, the bigger the reward.
 const EMERGENCY_POINTS_BY_URGENCY = {
 	critical: 25,
 	urgent: 15,
@@ -82,10 +79,6 @@ class EmergencyService {
 			};
 		}
 
-		// Figure out whether the viewer is allowed to see WHO responded.
-		// This endpoint is public (no login required), so without this check
-		// anyone could read every responding donor's name/phone/email just by
-		// opening the page — a real PII leak, not just a UX nicety.
 		let isAuthorizedViewer = false;
 		let viewerDonorId = null;
 
@@ -101,16 +94,12 @@ class EmergencyService {
 
 		const plain = request.toObject();
 		const respondentCount = plain.respondents.length;
-		// Comparing respondents.donor (a Donor _id) against a donor's own
-		// Donor _id — not the User _id, which is a different collection's id
-		// and would never match.
 		const hasResponded = viewerDonorId ? plain.respondents.some((r) => r.donor.toString() === viewerDonorId) : false;
 
 		if (isAuthorizedViewer) {
 			await request.populate({ path: "respondents.donor", populate: { path: "user", select: "name email phone" } });
 			plain.respondents = request.toObject().respondents;
 		} else {
-			// Strip donor identities for everyone else (other donors, guests).
 			delete plain.respondents;
 		}
 
@@ -156,18 +145,6 @@ class EmergencyService {
 		let donors = [];
 
 		if (geoLocation) {
-			// const nearbyBaseFilter = {
-			// 	bloodType: { $in: compatible },
-			// 	"notificationPreferences.emergency": true,
-			// 	availability: true,
-			// 	isEligible: true,
-			// 	location: {
-			// 		$near: {
-			// 			$geometry: geoLocation,
-			// 			$maxDistance: NEARBY_RADIUS_METERS,
-			// 		},
-			// 	},
-			// };
 			const baseFilter = {
 				bloodType: { $in: compatible },
 				"notificationPreferences.emergency": true,
@@ -333,12 +310,6 @@ class EmergencyService {
 		return { request, org };
 	}
 
-	// Records that a specific responding donor actually donated for this
-	// emergency — the counterpart to campaignService.markDonation. Without
-	// this, "respond" only ever registered interest; nothing downstream
-	// (points, badges, donation history, org inventory) ever fired for
-	// emergency donors even though the exact same thing happens for a
-	// campaign donation via markDonation.
 	async markEmergencyDonation(requestId, donorId, orgUserId) {
 		const request = await emergencyModel.findById(requestId);
 		if (!request) {
@@ -349,9 +320,6 @@ class EmergencyService {
 			};
 		}
 
-		// Ownership check — same reasoning as campaign markDonation: without
-		// it any authenticated org could credit donations on someone else's
-		// emergency request.
 		const org = await organizationModel.findOne({ user: orgUserId });
 		if (!org || request.organization.toString() !== org._id.toString()) {
 			throw {
@@ -392,8 +360,6 @@ class EmergencyService {
 
 		respondent.status = "donated";
 		request.unitsReceived += 1;
-		// Auto-close once enough units have come in, same as an org would do
-		// manually via fulfillEmergency — but don't fight a manual close.
 		if (request.unitsReceived >= request.unitsNeeded) {
 			request.status = "fulfilled";
 		}
@@ -419,8 +385,6 @@ class EmergencyService {
 		const newBadge = donor.badges.find((b) => !prevBadges.includes(b));
 		await donor.save();
 
-		// Auto-credit the organization's inventory/total, same as campaigns —
-		// otherwise emergency donations never showed up in stock at all.
 		if (org.bloodInventory && donor.bloodType in org.bloodInventory) {
 			org.bloodInventory[donor.bloodType] = (org.bloodInventory[donor.bloodType] || 0) + 1;
 		}
@@ -489,8 +453,6 @@ class EmergencyService {
 		if (unitsNeeded !== undefined) request.unitsNeeded = unitsNeeded;
 		if (urgencyLevel !== undefined) {
 			request.urgencyLevel = urgencyLevel;
-			// Keep the point reward in sync with urgency so donors who
-			// respond after an edit still get the right amount.
 			request.pointsReward = EMERGENCY_POINTS_BY_URGENCY[urgencyLevel] || request.pointsReward;
 		}
 		if (reason !== undefined) request.reason = reason;
@@ -553,9 +515,6 @@ class EmergencyService {
 	async deleteEmergency(requestId, userId) {
 		const { request } = await this._getOwnedEmergency(requestId, userId);
 
-		// Same reasoning as campaigns: once someone has responded, deleting
-		// outright would silently erase their response from history. Cancel
-		// instead to keep the record but stop it from being actionable.
 		if (request.respondents.length > 0) {
 			throw {
 				status: httpStatusCode.BAD_REQUEST,

@@ -218,7 +218,7 @@ export default function Landing() {
 								<motion.div key={c._id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
 									<Link to={`/campaigns/${c._id}`} className="card block hover:shadow-blood transition-all duration-300">
 										<div className="h-32 bg-gradient-to-br from-blood-800 to-crimson flex items-center justify-center">
-											<BloodDrop className="w-16 h-16 fill-white/20 animate-float" />
+											<img src={c.image} alt="" className="w-full h-full object-fit" />
 										</div>
 										<div className="p-5">
 											<div className="flex items-center gap-2 mb-2">

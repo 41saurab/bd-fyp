@@ -11,11 +11,6 @@ export default function DonorProfile() {
 	const { user, profile, fetchMe } = useAuth();
 	const [saving, setSaving] = useState(false);
 	const [locationPinned, setLocationPinned] = useState(!!profile?.location?.coordinates?.length);
-	// Tracked separately from the hidden inputs — relying on setValue(null) to
-	// propagate through an <input type="hidden"> is unreliable across browsers
-	// (assigning null to a native input's value coerces to an empty string,
-	// not null), so "clear" is tracked explicitly and applied when building
-	// the submit payload instead.
 	const [clearLocation, setClearLocation] = useState(false);
 
 	const { coords, loading: geoLoading, error: geoError, request: requestLocation } = useGeolocation();
@@ -56,7 +51,6 @@ export default function DonorProfile() {
 				payload.latitude = null;
 				payload.longitude = null;
 			} else if (!data.latitude || !data.longitude) {
-				// Nothing changed — don't send half-empty coordinates.
 				delete payload.latitude;
 				delete payload.longitude;
 			}

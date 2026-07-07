@@ -60,10 +60,6 @@ class CampaignService {
 			};
 		}
 
-		// Same PII gating as emergency respondents: this endpoint is public
-		// (no login required to view a campaign), so without this check
-		// anyone could read every registered donor's name/email/phone just by
-		// requesting a campaign id.
 		let isAuthorizedViewer = false;
 		let viewerDonorId = null;
 		if (requester?.role === "admin") {
@@ -77,8 +73,6 @@ class CampaignService {
 		}
 
 		const plain = campaign.toObject();
-		// Computed before stripping, so a donor can still tell whether THEY
-		// are registered even though other donors' identities get hidden below.
 		const isRegistered = viewerDonorId ? plain.registeredDonors.some((r) => r.donor.toString() === viewerDonorId) : false;
 
 		if (isAuthorizedViewer) {
@@ -88,7 +82,6 @@ class CampaignService {
 			});
 			plain.registeredDonors = campaign.toObject().registeredDonors;
 		} else {
-			// Everyone else just gets the count via .length — strip identities.
 			plain.registeredDonors = plain.registeredDonors.map((r) => ({ status: r.status, registeredAt: r.registeredAt }));
 		}
 
@@ -170,8 +163,6 @@ class CampaignService {
 			campaign.image = uploadResult;
 		}
 
-		// Re-derive status from the (possibly changed) dates, same rule used at
-		// creation time, unless it's already been manually cancelled.
 		if (campaign.status !== "cancelled") {
 			const now = new Date();
 			if (now < campaign.startDate) campaign.status = "upcoming";
@@ -194,7 +185,6 @@ class CampaignService {
 		campaign.status = "cancelled";
 		await campaign.save();
 
-		// Let anyone already registered know it's off.
 		for (const reg of campaign.registeredDonors) {
 			if (reg.status !== "registered") continue;
 			const donor = await donorModel.findById(reg.donor).populate("user", "name email");
@@ -226,10 +216,6 @@ class CampaignService {
 	async deleteCampaign(campaignId, userId) {
 		const { campaign } = await this._getOwnedCampaign(campaignId, userId);
 
-		// Hard delete is only safe when nothing depends on this record yet —
-		// otherwise a donor's donation history / points would point at a
-		// campaign that no longer exists. Anything with registrations should
-		// be cancelled instead, which keeps the record (and history) intact.
 		if (campaign.registeredDonors.length > 0) {
 			throw {
 				status: httpStatusCode.BAD_REQUEST,
@@ -435,10 +421,6 @@ class CampaignService {
 			};
 		}
 
-		// Ownership check — without this, any authenticated organization could
-		// mark a donation on ANY campaign (not just their own) by knowing/
-		// guessing its id, letting them inflate another org's inventory or a
-		// donor's points/badges.
 		const org = await organizationModel.findOne({ user: orgUserId });
 		if (!org || campaign.organization.toString() !== org._id.toString()) {
 			throw {
@@ -471,8 +453,6 @@ class CampaignService {
 			};
 		}
 
-		// 56-day cooldown — blocks marking a donation for a donor who donated
-		// too recently elsewhere.
 		if (!donor.checkEligibility()) {
 			const daysLeft = donor.lastDonationDate ? Math.max(0, 56 - Math.floor((Date.now() - donor.lastDonationDate) / (1000 * 60 * 60 * 24))) : 0;
 			throw {
@@ -503,9 +483,6 @@ class CampaignService {
 		const newBadge = donor.badges.find((b) => !prevBadges.includes(b));
 		await donor.save();
 
-		// Auto-credit the organization's blood inventory and donation total —
-		// previously this required a separate manual PATCH after every single
-		// donation, so inventory numbers silently drifted from reality.
 		if (org.bloodInventory && donor.bloodType in org.bloodInventory) {
 			org.bloodInventory[donor.bloodType] = (org.bloodInventory[donor.bloodType] || 0) + 1;
 		}
@@ -577,7 +554,6 @@ class CampaignService {
 
 		return campaigns;
 	}
-
 }
 
 export const campaignService = new CampaignService();
